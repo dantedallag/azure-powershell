@@ -27,13 +27,6 @@ New-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
  [<CommonParameters>]
 ```
 
-### Create
-```
-New-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> -DeploymentStack <IDeploymentStack>
- [-SubscriptionId <String>] [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf]
- [<CommonParameters>]
-```
-
 ### Create1
 ```
 New-AzResourceDeploymentStack -Name <String> -DeploymentStack <IDeploymentStack> [-SubscriptionId <String>]
@@ -76,12 +69,6 @@ New-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String>
  [<CommonParameters>]
 ```
 
-### CreateViaIdentity
-```
-New-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> -DeploymentStack <IDeploymentStack>
- [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf] [<CommonParameters>]
-```
-
 ### CreateViaIdentity1
 ```
 New-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> -DeploymentStack <IDeploymentStack>
@@ -92,21 +79,6 @@ New-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> -Deployme
 ```
 New-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> -DeploymentStack <IDeploymentStack>
  [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf] [<CommonParameters>]
-```
-
-### CreateViaIdentityExpanded
-```
-New-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
- [-ActionOnUnmanageManagementGroup <DeploymentStacksDeleteDetachEnum>]
- [-ActionOnUnmanageResource <DeploymentStacksDeleteDetachEnum>]
- [-ActionOnUnmanageResourceGroup <DeploymentStacksDeleteDetachEnum>] [-DebugSettingDetailLevel <String>]
- [-DenySettingApplyToChildScope] [-DenySettingExcludedAction <String[]>]
- [-DenySettingExcludedPrincipal <String[]>] [-DenySettingMode <DenySettingsMode>] [-DeploymentScope <String>]
- [-Description <String>] [-Location <String>] [-Parameter <IAny>] [-ParameterLinkContentVersion <String>]
- [-ParameterLinkUri <String>] [-Tag <Hashtable>] [-Template <IAny>] [-TemplateLinkContentVersion <String>]
- [-TemplateLinkId <String>] [-TemplateLinkQueryString <String>] [-TemplateLinkRelativePath <String>]
- [-TemplateLinkUri <String>] [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf]
- [<CommonParameters>]
 ```
 
 ### CreateViaIdentityExpanded1
@@ -175,7 +147,7 @@ Detach will leave the resource in it's current state.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.DeploymentStacksDeleteDetachEnum
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -192,7 +164,7 @@ Detach will leave the resource in it's current state.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.DeploymentStacksDeleteDetachEnum
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -209,7 +181,7 @@ Detach will leave the resource in it's current state.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.DeploymentStacksDeleteDetachEnum
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -243,7 +215,7 @@ By logging information about the request or response, sensitive data that is ret
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -274,7 +246,7 @@ DenySettings will be applied to child scopes.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -293,7 +265,7 @@ Duplicate actions will be removed.
 
 ```yaml
 Type: System.String[]
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -309,7 +281,7 @@ Up to 5 principals are permitted.
 
 ```yaml
 Type: System.String[]
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -324,7 +296,7 @@ denySettings Mode.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.DenySettingsMode
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -341,7 +313,7 @@ Valid scopes are: management group (format: '/providers/Microsoft.Management/man
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -357,7 +329,7 @@ To construct, see NOTES section for DEPLOYMENTSTACK properties and create a hash
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.IDeploymentStack
-Parameter Sets: Create, Create1, Create2, CreateViaIdentity, CreateViaIdentity1, CreateViaIdentity2
+Parameter Sets: Create1, Create2, CreateViaIdentity1, CreateViaIdentity2
 Aliases:
 
 Required: True
@@ -372,7 +344,7 @@ Deployment stack description.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -388,7 +360,7 @@ To construct, see NOTES section for INPUTOBJECT properties and create a hash tab
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
-Parameter Sets: CreateViaIdentity, CreateViaIdentity1, CreateViaIdentity2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateViaIdentity1, CreateViaIdentity2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: True
@@ -405,7 +377,7 @@ It must be one of the supported Azure locations.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -435,7 +407,7 @@ Name of the deployment stack.
 
 ```yaml
 Type: System.String
-Parameter Sets: Create, Create1, Create2, CreateExpanded, CreateExpanded1, CreateExpanded2
+Parameter Sets: Create1, Create2, CreateExpanded, CreateExpanded1, CreateExpanded2
 Aliases: DeploymentStackName
 
 Required: True
@@ -468,7 +440,7 @@ It can be a JObject or a well formed JSON string.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IAny
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -483,7 +455,7 @@ If included, must match the ContentVersion in the template.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -498,7 +470,7 @@ The URI of the parameters file.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -514,7 +486,7 @@ The name is case insensitive.
 
 ```yaml
 Type: System.String
-Parameter Sets: Create, CreateExpanded
+Parameter Sets: CreateExpanded
 Aliases:
 
 Required: True
@@ -529,7 +501,7 @@ The ID of the target subscription.
 
 ```yaml
 Type: System.String
-Parameter Sets: Create, Create1, CreateExpanded, CreateExpanded1
+Parameter Sets: Create1, CreateExpanded, CreateExpanded1
 Aliases:
 
 Required: False
@@ -544,7 +516,7 @@ Deployment stack resource tags.
 
 ```yaml
 Type: System.Collections.Hashtable
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -562,7 +534,7 @@ Use either the templateLink property or the template property, but not both.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IAny
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -577,7 +549,7 @@ If included, must match the ContentVersion in the template.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -593,7 +565,7 @@ Use either the id or uri property, but not both.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -608,7 +580,7 @@ The query string (for example, a SAS token) to be used with the templateLink URI
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -625,7 +597,7 @@ If the parent was linked with a URI, the child deployment will be a combination 
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
@@ -641,7 +613,7 @@ Use either the uri or id property, but not both.
 
 ```yaml
 Type: System.String
-Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
+Parameter Sets: CreateExpanded, CreateExpanded1, CreateExpanded2, CreateViaIdentityExpanded1, CreateViaIdentityExpanded2
 Aliases:
 
 Required: False
