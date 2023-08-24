@@ -1,11 +1,11 @@
 ---
 external help file:
-Module Name: DeploymentStacks
-online version: https://learn.microsoft.com/powershell/module/deploymentstacks/get-deploymentstack
+Module Name: Az.Resources
+online version: https://learn.microsoft.com/powershell/module/az.resources/get-azresourcedeploymentstack
 schema: 2.0.0
 ---
 
-# Get-DeploymentStack
+# Get-AzResourceDeploymentStack
 
 ## SYNOPSIS
 Gets a Deployment Stack with a given name.
@@ -14,48 +14,54 @@ Gets a Deployment Stack with a given name.
 
 ### List1 (Default)
 ```
-Get-DeploymentStack -SubscriptionId <String> [<CommonParameters>]
+Get-AzResourceDeploymentStack [-SubscriptionId <String[]>] [-DefaultProfile <PSObject>] [<CommonParameters>]
 ```
 
 ### Get
 ```
-Get-DeploymentStack -DeploymentStackName <String> -ResourceGroupName <String> -SubscriptionId <String>
- [<CommonParameters>]
+Get-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String[]>]
+ [-DefaultProfile <PSObject>] [<CommonParameters>]
 ```
 
 ### Get1
 ```
-Get-DeploymentStack -DeploymentStackName <String> -SubscriptionId <String> [<CommonParameters>]
+Get-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String[]>] [-DefaultProfile <PSObject>]
+ [<CommonParameters>]
 ```
 
 ### Get2
 ```
-Get-DeploymentStack -DeploymentStackName <String> -ManagementGroupId <String> [<CommonParameters>]
+Get-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String> [-DefaultProfile <PSObject>]
+ [<CommonParameters>]
 ```
 
 ### GetViaIdentity
 ```
-Get-DeploymentStack -InputObject <IDeploymentStacksIdentity> [<CommonParameters>]
+Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
+ [<CommonParameters>]
 ```
 
 ### GetViaIdentity1
 ```
-Get-DeploymentStack -InputObject <IDeploymentStacksIdentity> [<CommonParameters>]
+Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
+ [<CommonParameters>]
 ```
 
 ### GetViaIdentity2
 ```
-Get-DeploymentStack -InputObject <IDeploymentStacksIdentity> [<CommonParameters>]
+Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
+ [<CommonParameters>]
 ```
 
 ### List
 ```
-Get-DeploymentStack -ResourceGroupName <String> -SubscriptionId <String> [<CommonParameters>]
+Get-AzResourceDeploymentStack -ResourceGroupName <String> [-SubscriptionId <String[]>]
+ [-DefaultProfile <PSObject>] [<CommonParameters>]
 ```
 
 ### List2
 ```
-Get-DeploymentStack -ManagementGroupId <String> [<CommonParameters>]
+Get-AzResourceDeploymentStack -ManagementGroupId <String> [-DefaultProfile <PSObject>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -87,15 +93,16 @@ Gets a Deployment Stack with a given name.
 
 ## PARAMETERS
 
-### -DeploymentStackName
-Name of the deployment stack.
+### -DefaultProfile
+The DefaultProfile parameter is not functional.
+Use the SubscriptionId parameter when available if executing the cmdlet against a different subscription.
 
 ```yaml
-Type: System.String
-Parameter Sets: Get, Get1, Get2
-Aliases:
+Type: System.Management.Automation.PSObject
+Parameter Sets: (All)
+Aliases: AzureRMContext, AzureCredential
 
-Required: True
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
@@ -107,7 +114,7 @@ Identity Parameter
 To construct, see NOTES section for INPUTOBJECT properties and create a hash table.
 
 ```yaml
-Type: Sample.API.Models.IDeploymentStacksIdentity
+Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
 Parameter Sets: GetViaIdentity, GetViaIdentity1, GetViaIdentity2
 Aliases:
 
@@ -125,6 +132,21 @@ Management Group.
 Type: System.String
 Parameter Sets: Get2, List2
 Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Name
+Name of the deployment stack.
+
+```yaml
+Type: System.String
+Parameter Sets: Get, Get1, Get2
+Aliases: DeploymentStackName
 
 Required: True
 Position: Named
@@ -153,13 +175,13 @@ Accept wildcard characters: False
 The ID of the target subscription.
 
 ```yaml
-Type: System.String
+Type: System.String[]
 Parameter Sets: Get, Get1, List, List1
 Aliases:
 
-Required: True
+Required: False
 Position: Named
-Default value: None
+Default value: (Get-AzContext).Subscription.Id
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -169,11 +191,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### Sample.API.Models.IDeploymentStacksIdentity
+### Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
 
 ## OUTPUTS
 
-### Sample.API.Models.IDeploymentStack
+### Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.IDeploymentStack
 
 ## NOTES
 
@@ -186,6 +208,7 @@ To create the parameters described below, construct a hash table containing the 
 
 `INPUTOBJECT <IDeploymentStacksIdentity>`: Identity Parameter
   - `[DeploymentStackName <String>]`: Name of the deployment stack.
+  - `[Id <String>]`: Resource identity path
   - `[ManagementGroupId <String>]`: Management Group.
   - `[ResourceGroupName <String>]`: The name of the resource group. The name is case insensitive.
   - `[SubscriptionId <String>]`: The ID of the target subscription.

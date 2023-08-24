@@ -1,11 +1,11 @@
 ---
 external help file:
-Module Name: DeploymentStacks
-online version: https://learn.microsoft.com/powershell/module/deploymentstacks/remove-deploymentstack
+Module Name: Az.Resources
+online version: https://learn.microsoft.com/powershell/module/az.resources/remove-azresourcedeploymentstack
 schema: 2.0.0
 ---
 
-# Remove-DeploymentStack
+# Remove-AzResourceDeploymentStack
 
 ## SYNOPSIS
 Deletes a Deployment Stack by name.
@@ -15,52 +15,52 @@ When operation completes, status code 200 returned without content.
 
 ### Delete1 (Default)
 ```
-Remove-DeploymentStack -DeploymentStackName <String> -SubscriptionId <String>
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### Delete
 ```
-Remove-DeploymentStack -DeploymentStackName <String> -ResourceGroupName <String> -SubscriptionId <String>
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String>]
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### Delete2
 ```
-Remove-DeploymentStack -DeploymentStackName <String> -ManagementGroupId <String>
- [-UnmanageActionManagementGroups <UnmanageActionManagementGroupMode>]
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String>
+ [-UnmanageActionManagementGroup <UnmanageActionManagementGroupMode>]
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### DeleteViaIdentity
 ```
-Remove-DeploymentStack -InputObject <IDeploymentStacksIdentity>
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### DeleteViaIdentity1
 ```
-Remove-DeploymentStack -InputObject <IDeploymentStacksIdentity>
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### DeleteViaIdentity2
 ```
-Remove-DeploymentStack -InputObject <IDeploymentStacksIdentity>
- [-UnmanageActionManagementGroups <UnmanageActionManagementGroupMode>]
- [-UnmanageActionResourceGroups <UnmanageActionResourceGroupMode>]
- [-UnmanageActionResources <UnmanageActionResourceMode>] [-AsJob] [-NoWait] [-PassThru] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+ [-UnmanageActionManagementGroup <UnmanageActionManagementGroupMode>]
+ [-UnmanageActionResource <UnmanageActionResourceMode>]
+ [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -108,15 +108,16 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -DeploymentStackName
-Name of the deployment stack.
+### -DefaultProfile
+The DefaultProfile parameter is not functional.
+Use the SubscriptionId parameter when available if executing the cmdlet against a different subscription.
 
 ```yaml
-Type: System.String
-Parameter Sets: Delete, Delete1, Delete2
-Aliases:
+Type: System.Management.Automation.PSObject
+Parameter Sets: (All)
+Aliases: AzureRMContext, AzureCredential
 
-Required: True
+Required: False
 Position: Named
 Default value: None
 Accept pipeline input: False
@@ -128,7 +129,7 @@ Identity Parameter
 To construct, see NOTES section for INPUTOBJECT properties and create a hash table.
 
 ```yaml
-Type: Sample.API.Models.IDeploymentStacksIdentity
+Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
 Parameter Sets: DeleteViaIdentity, DeleteViaIdentity1, DeleteViaIdentity2
 Aliases:
 
@@ -146,6 +147,21 @@ Management Group.
 Type: System.String
 Parameter Sets: Delete2
 Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Name
+Name of the deployment stack.
+
+```yaml
+Type: System.String
+Parameter Sets: Delete, Delete1, Delete2
+Aliases: DeploymentStackName
 
 Required: True
 Position: Named
@@ -208,18 +224,18 @@ Type: System.String
 Parameter Sets: Delete, Delete1
 Aliases:
 
-Required: True
+Required: False
 Position: Named
-Default value: None
+Default value: (Get-AzContext).Subscription.Id
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -UnmanageActionManagementGroups
+### -UnmanageActionManagementGroup
 Flag to indicate delete rather than detach for the management groups.
 
 ```yaml
-Type: Sample.API.Support.UnmanageActionManagementGroupMode
+Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.UnmanageActionManagementGroupMode
 Parameter Sets: Delete2, DeleteViaIdentity2
 Aliases:
 
@@ -230,11 +246,11 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -UnmanageActionResourceGroups
-Flag to indicate delete rather than detach for the resource groups.
+### -UnmanageActionResource
+Flag to indicate delete rather than detach for the resources.
 
 ```yaml
-Type: Sample.API.Support.UnmanageActionResourceGroupMode
+Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.UnmanageActionResourceMode
 Parameter Sets: (All)
 Aliases:
 
@@ -245,11 +261,11 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -UnmanageActionResources
-Flag to indicate delete rather than detach for the resources.
+### -UnmanageActionResourceGroup
+Flag to indicate delete rather than detach for the resource groups.
 
 ```yaml
-Type: Sample.API.Support.UnmanageActionResourceMode
+Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Support.UnmanageActionResourceGroupMode
 Parameter Sets: (All)
 Aliases:
 
@@ -296,7 +312,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## INPUTS
 
-### Sample.API.Models.IDeploymentStacksIdentity
+### Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
 
 ## OUTPUTS
 
@@ -313,6 +329,7 @@ To create the parameters described below, construct a hash table containing the 
 
 `INPUTOBJECT <IDeploymentStacksIdentity>`: Identity Parameter
   - `[DeploymentStackName <String>]`: Name of the deployment stack.
+  - `[Id <String>]`: Resource identity path
   - `[ManagementGroupId <String>]`: Management Group.
   - `[ResourceGroupName <String>]`: The name of the resource group. The name is case insensitive.
   - `[SubscriptionId <String>]`: The ID of the target subscription.
