@@ -1,11 +1,11 @@
 ---
 external help file:
 Module Name: Az.Resources
-online version: https://learn.microsoft.com/powershell/module/az.resources/set-azresourcedeploymentstack
+online version: https://learn.microsoft.com/powershell/module/az.resources/set-azdeploymentstacksdeploymentstack
 schema: 2.0.0
 ---
 
-# Set-AzResourceDeploymentStack
+# Set-AzDeploymentStacksDeploymentStack
 
 ## SYNOPSIS
 Creates or updates a Deployment Stack.
@@ -14,7 +14,7 @@ Creates or updates a Deployment Stack.
 
 ### UpdateExpanded1 (Default)
 ```
-Set-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
+Set-AzDeploymentStacksDeploymentStack -Name <String> [-SubscriptionId <String>]
  [-ActionOnUnmanageManagementGroup <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResource <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResourceGroup <DeploymentStacksDeleteDetachEnum>] [-DebugSettingDetailLevel <String>]
@@ -29,26 +29,28 @@ Set-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
 
 ### Update
 ```
-Set-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> -DeploymentStack <IDeploymentStack>
- [-SubscriptionId <String>] [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Set-AzDeploymentStacksDeploymentStack -Name <String> -ResourceGroupName <String>
+ -DeploymentStack <IDeploymentStack> [-SubscriptionId <String>] [-DefaultProfile <PSObject>] [-AsJob]
+ [-NoWait] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### Update1
 ```
-Set-AzResourceDeploymentStack -Name <String> -DeploymentStack <IDeploymentStack> [-SubscriptionId <String>]
- [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf] [<CommonParameters>]
+Set-AzDeploymentStacksDeploymentStack -Name <String> -DeploymentStack <IDeploymentStack>
+ [-SubscriptionId <String>] [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ### Update2
 ```
-Set-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String> -DeploymentStack <IDeploymentStack>
- [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf] [<CommonParameters>]
+Set-AzDeploymentStacksDeploymentStack -ManagementGroupId <String> -Name <String>
+ -DeploymentStack <IDeploymentStack> [-DefaultProfile <PSObject>] [-AsJob] [-NoWait] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ### UpdateExpanded
 ```
-Set-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String>]
+Set-AzDeploymentStacksDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String>]
  [-ActionOnUnmanageManagementGroup <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResource <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResourceGroup <DeploymentStacksDeleteDetachEnum>] [-DebugSettingDetailLevel <String>]
@@ -63,7 +65,7 @@ Set-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-Subsc
 
 ### UpdateExpanded2
 ```
-Set-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String>
+Set-AzDeploymentStacksDeploymentStack -ManagementGroupId <String> -Name <String>
  [-ActionOnUnmanageManagementGroup <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResource <DeploymentStacksDeleteDetachEnum>]
  [-ActionOnUnmanageResourceGroup <DeploymentStacksDeleteDetachEnum>] [-DebugSettingDetailLevel <String>]

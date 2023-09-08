@@ -24,7 +24,43 @@ The easiest way currently to start developing custom cmdlets is to copy an exist
 - HttpPipelineAppend
 - HttpPipelinePrepend
 - Proxy
-- ProxyCredential
+- ProxyCredential# ----------------------------------------------------------------------------------
+#
+# Copyright Microsoft Corporation
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ----------------------------------------------------------------------------------
+
+function Confirmation {
+    [OutputType([bool])]
+    [CmdletBinding(PositionalBinding, SupportsShouldProcess, ConfirmImpact='Medium')]
+    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
+    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Prompts for a confirmation from the user')]
+    param(
+        [Parameter(Position = 0, Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]
+        $Message
+    )
+
+    process {
+        try {
+            # prompt user for confirmation
+            # if input not understood, retry
+            # yes, no, suspend, and ? (help)
+        }
+        catch {
+            throw
+        }
+    }
+}
 - ProxyUseDefaultCredentials
 
 These provide functionality to our HTTP pipeline and other useful features. In script, you can forward these parameters using `$PSBoundParameters` to the other cmdlets you're calling within `Az.DeploymentStacks`. For C#, follow the usage seen in the `ProcessRecordAsync` method.

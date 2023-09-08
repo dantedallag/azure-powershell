@@ -11,7 +11,7 @@
   DotNetFrameworkVersion = '4.7.2'
   RequiredAssemblies = './bin/Az.DeploymentStacks.private.dll'
   FormatsToProcess = './Az.DeploymentStacks.format.ps1xml'
-  FunctionsToExport = 'Export-AzResourceDeploymentStackTemplate', 'Get-AzResourceDeploymentStack', 'New-AzResourceDeploymentStack', 'Remove-AzResourceDeploymentStack', 'Set-AzResourceDeploymentStack', '*'
+  FunctionsToExport = 'Export-AzDeploymentStacksDeploymentStackTemplate', 'Get-AzSubscriptionDeploymentStackCustom', 'New-AzSubscriptionDeploymentStackCustom', 'Remove-AzDeploymentStacksDeploymentStack', 'Set-AzDeploymentStacksDeploymentStack', '*'
   AliasesToExport = '*'
   PrivateData = @{
     PSData = @{

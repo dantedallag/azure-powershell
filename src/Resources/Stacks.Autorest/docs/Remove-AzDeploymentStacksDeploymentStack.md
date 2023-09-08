@@ -1,11 +1,11 @@
 ---
 external help file:
 Module Name: Az.Resources
-online version: https://learn.microsoft.com/powershell/module/az.resources/remove-azresourcedeploymentstack
+online version: https://learn.microsoft.com/powershell/module/az.resources/remove-azdeploymentstacksdeploymentstack
 schema: 2.0.0
 ---
 
-# Remove-AzResourceDeploymentStack
+# Remove-AzDeploymentStacksDeploymentStack
 
 ## SYNOPSIS
 Deletes a Deployment Stack by name.
@@ -15,7 +15,7 @@ When operation completes, status code 200 returned without content.
 
 ### Delete1 (Default)
 ```
-Remove-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
+Remove-AzDeploymentStacksDeploymentStack -Name <String> [-SubscriptionId <String>]
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
  [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
@@ -23,7 +23,7 @@ Remove-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String>]
 
 ### Delete
 ```
-Remove-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String>]
+Remove-AzDeploymentStacksDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String>]
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
  [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
@@ -31,7 +31,7 @@ Remove-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-Su
 
 ### Delete2
 ```
-Remove-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String>
+Remove-AzDeploymentStacksDeploymentStack -ManagementGroupId <String> -Name <String>
  [-UnmanageActionManagementGroup <UnmanageActionManagementGroupMode>]
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
@@ -40,7 +40,7 @@ Remove-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String>
 
 ### DeleteViaIdentity
 ```
-Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+Remove-AzDeploymentStacksDeploymentStack -InputObject <IDeploymentStacksIdentity>
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
  [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
@@ -48,7 +48,7 @@ Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
 
 ### DeleteViaIdentity1
 ```
-Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+Remove-AzDeploymentStacksDeploymentStack -InputObject <IDeploymentStacksIdentity>
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]
  [-NoWait] [-PassThru] [-Confirm] [-WhatIf] [<CommonParameters>]
@@ -56,7 +56,7 @@ Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
 
 ### DeleteViaIdentity2
 ```
-Remove-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity>
+Remove-AzDeploymentStacksDeploymentStack -InputObject <IDeploymentStacksIdentity>
  [-UnmanageActionManagementGroup <UnmanageActionManagementGroupMode>]
  [-UnmanageActionResource <UnmanageActionResourceMode>]
  [-UnmanageActionResourceGroup <UnmanageActionResourceGroupMode>] [-DefaultProfile <PSObject>] [-AsJob]

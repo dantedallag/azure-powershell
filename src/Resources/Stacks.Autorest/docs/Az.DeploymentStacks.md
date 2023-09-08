@@ -11,19 +11,19 @@ Locale: en-US
 Microsoft Azure PowerShell: DeploymentStacks cmdlets
 
 ## Az.DeploymentStacks Cmdlets
-### [Export-AzResourceDeploymentStackTemplate](Export-AzResourceDeploymentStackTemplate.md)
+### [Export-AzDeploymentStacksDeploymentStackTemplate](Export-AzDeploymentStacksDeploymentStackTemplate.md)
 Exports the template used to create the deployment stack.
 
-### [Get-AzResourceDeploymentStack](Get-AzResourceDeploymentStack.md)
-Gets a Deployment Stack with a given name.
+### [Get-AzSubscriptionDeploymentStackCustom](Get-AzSubscriptionDeploymentStackCustom.md)
+Retrieves a subscription scoped deployment stack
 
-### [New-AzResourceDeploymentStack](New-AzResourceDeploymentStack.md)
-Creates or updates a Deployment Stack.
+### [New-AzSubscriptionDeploymentStackCustom](New-AzSubscriptionDeploymentStackCustom.md)
+Creates a new subscription scoped deployment stack
 
-### [Remove-AzResourceDeploymentStack](Remove-AzResourceDeploymentStack.md)
+### [Remove-AzDeploymentStacksDeploymentStack](Remove-AzDeploymentStacksDeploymentStack.md)
 Deletes a Deployment Stack by name.
 When operation completes, status code 200 returned without content.
 
-### [Set-AzResourceDeploymentStack](Set-AzResourceDeploymentStack.md)
+### [Set-AzDeploymentStacksDeploymentStack](Set-AzDeploymentStacksDeploymentStack.md)
 Creates or updates a Deployment Stack.
 

@@ -38,8 +38,6 @@ input-file:
 root-module-name: $(prefix).Resources
 title: DeploymentStacks
 namespace: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks
-# remove subject-prefix for all generated cmdlets.
-subject-prefix: 'Resource'
 identity-correction-for-post: true
 resourcegroup-append: true
 default-exclude-tableview-properties: false
@@ -49,14 +47,10 @@ directive:
   # Remove "Create", "CreateViaIdentity", "CreateViaIdentityExpanded" syntax variant of the cmdlets. Because of new cmdlet does unsupport.
   - where:
       verb: New
-      variant: ^Create$|^CreateViaIdentity$|^CreateViaIdentityExpanded$
-      # subject: RoleEligibilityScheduleRequest$|RoleManagementPolicyAssignment$
-    remove: true
-
-  # Remove "Update", "UpdateViaIdentity", syntax variant of the cmdlets. Because of update cmdlet does unsupport.
+      subject: DeploymentStack
+    hide: true
   - where:
-      verb: Update
-      variant: ^Update$|^UpdateViaIdentity$
-      subject: RoleManagementPolicy$
-    remove: true
+      verb: Get
+      subject: DeploymentStack
+    hide: true
 ```

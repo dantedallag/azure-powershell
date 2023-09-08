@@ -1,71 +1,55 @@
 ---
 external help file:
 Module Name: Az.Resources
-online version: https://learn.microsoft.com/powershell/module/az.resources/get-azresourcedeploymentstack
+online version: https://learn.microsoft.com/powershell/module/az.resources/export-azdeploymentstacksdeploymentstacktemplate
 schema: 2.0.0
 ---
 
-# Get-AzResourceDeploymentStack
+# Export-AzDeploymentStacksDeploymentStackTemplate
 
 ## SYNOPSIS
-Gets a Deployment Stack with a given name.
+Exports the template used to create the deployment stack.
 
 ## SYNTAX
 
-### List1 (Default)
+### Export1 (Default)
 ```
-Get-AzResourceDeploymentStack [-SubscriptionId <String[]>] [-DefaultProfile <PSObject>] [<CommonParameters>]
-```
-
-### Get
-```
-Get-AzResourceDeploymentStack -Name <String> -ResourceGroupName <String> [-SubscriptionId <String[]>]
- [-DefaultProfile <PSObject>] [<CommonParameters>]
+Export-AzDeploymentStacksDeploymentStackTemplate -DeploymentStackName <String> [-SubscriptionId <String>]
+ [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
-### Get1
+### Export
 ```
-Get-AzResourceDeploymentStack -Name <String> [-SubscriptionId <String[]>] [-DefaultProfile <PSObject>]
- [<CommonParameters>]
-```
-
-### Get2
-```
-Get-AzResourceDeploymentStack -ManagementGroupId <String> -Name <String> [-DefaultProfile <PSObject>]
- [<CommonParameters>]
+Export-AzDeploymentStacksDeploymentStackTemplate -DeploymentStackName <String> -ResourceGroupName <String>
+ [-SubscriptionId <String>] [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
-### GetViaIdentity
+### Export2
 ```
-Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
- [<CommonParameters>]
-```
-
-### GetViaIdentity1
-```
-Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
- [<CommonParameters>]
+Export-AzDeploymentStacksDeploymentStackTemplate -DeploymentStackName <String> -ManagementGroupId <String>
+ [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
-### GetViaIdentity2
+### ExportViaIdentity
 ```
-Get-AzResourceDeploymentStack -InputObject <IDeploymentStacksIdentity> [-DefaultProfile <PSObject>]
- [<CommonParameters>]
-```
-
-### List
-```
-Get-AzResourceDeploymentStack -ResourceGroupName <String> [-SubscriptionId <String[]>]
- [-DefaultProfile <PSObject>] [<CommonParameters>]
+Export-AzDeploymentStacksDeploymentStackTemplate -InputObject <IDeploymentStacksIdentity>
+ [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
-### List2
+### ExportViaIdentity1
 ```
-Get-AzResourceDeploymentStack -ManagementGroupId <String> [-DefaultProfile <PSObject>] [<CommonParameters>]
+Export-AzDeploymentStacksDeploymentStackTemplate -InputObject <IDeploymentStacksIdentity>
+ [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
+```
+
+### ExportViaIdentity2
+```
+Export-AzDeploymentStacksDeploymentStackTemplate -InputObject <IDeploymentStacksIdentity>
+ [-DefaultProfile <PSObject>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
-Gets a Deployment Stack with a given name.
+Exports the template used to create the deployment stack.
 
 ## EXAMPLES
 
@@ -109,13 +93,28 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -DeploymentStackName
+Name of the deployment stack.
+
+```yaml
+Type: System.String
+Parameter Sets: Export, Export1, Export2
+Aliases:
+
+Required: True
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -InputObject
 Identity Parameter
 To construct, see NOTES section for INPUTOBJECT properties and create a hash table.
 
 ```yaml
 Type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.IDeploymentStacksIdentity
-Parameter Sets: GetViaIdentity, GetViaIdentity1, GetViaIdentity2
+Parameter Sets: ExportViaIdentity, ExportViaIdentity1, ExportViaIdentity2
 Aliases:
 
 Required: True
@@ -130,23 +129,8 @@ Management Group.
 
 ```yaml
 Type: System.String
-Parameter Sets: Get2, List2
+Parameter Sets: Export2
 Aliases:
-
-Required: True
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Name
-Name of the deployment stack.
-
-```yaml
-Type: System.String
-Parameter Sets: Get, Get1, Get2
-Aliases: DeploymentStackName
 
 Required: True
 Position: Named
@@ -161,7 +145,7 @@ The name is case insensitive.
 
 ```yaml
 Type: System.String
-Parameter Sets: Get, List
+Parameter Sets: Export
 Aliases:
 
 Required: True
@@ -175,13 +159,44 @@ Accept wildcard characters: False
 The ID of the target subscription.
 
 ```yaml
-Type: System.String[]
-Parameter Sets: Get, Get1, List, List1
+Type: System.String
+Parameter Sets: Export, Export1
 Aliases:
 
 Required: False
 Position: Named
 Default value: (Get-AzContext).Subscription.Id
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Confirm
+Prompts you for confirmation before running the cmdlet.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -195,7 +210,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ## OUTPUTS
 
-### Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.IDeploymentStack
+### Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.IDeploymentStackTemplateDefinition
 
 ## NOTES
 
