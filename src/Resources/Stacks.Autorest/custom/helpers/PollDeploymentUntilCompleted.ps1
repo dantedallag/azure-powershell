@@ -14,7 +14,7 @@
 
 function PollDeploymentUntilCompleted {
     [OutputType([bool])]
-    [CmdletBinding(PositionalBinding, SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(PositionalBinding)]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Polls deployment until completed')]
     param(

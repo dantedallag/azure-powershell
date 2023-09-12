@@ -43,11 +43,11 @@ function Get-AzSubscriptionDeploymentStackCustom {
         # SendAsync Pipeline Steps to be prepended to the front of the pipeline.
         ${HttpPipelinePrepend},
 
-        # [Parameter(DontShow)]
+        [Parameter(DontShow)]
         # [Parameter(HelpMessage = 'Run the command asynchronously.')]
-        # [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
-        # [switch]
-        # ${NoWait},
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
+        [switch]
+        ${NoWait},
 
         [Parameter(DontShow)]
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]

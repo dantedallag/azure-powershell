@@ -99,7 +99,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DenySettingsApplyToChildScopes},
 
         [Parameter(HelpMessage = "The tags to put on the deployment.")]
-        [hashtable]
+        [System.Collections.Hashtable]
         ${Tag},
 
         [Parameter(HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
@@ -111,22 +111,23 @@ function New-AzSubscriptionDeploymentStackCustom {
         [string]
         ${DeploymentResourceGroupName},
 
-        [Parameter(HelpMessage = "Skips the PowerShell dynamic parameter processing that checks if the provided template parameter contains all necessary parameters used by the template. " +
-        "This check would prompt the user to provide a value for the missing parameters, but providing the -SkipTemplateParameterPrompt will ignore this prompt and " +
-        "error out immediately if a parameter was found not to be bound in the template. For non-interactive scripts, -SkipTemplateParameterPrompt can be provided " +
-        "to provide a better error message in the case where not all required parameters are satisfied.")]
-        [switch]
-        ${SkipTemplateParameterPrompt},
+        # TODO: Will be needed potentially in Dynamic Parameters
+        # [Parameter(HelpMessage = "Skips the PowerShell dynamic parameter processing that checks if the provided template parameter contains all necessary parameters used by the template. " +
+        # "This check would prompt the user to provide a value for the missing parameters, but providing the -SkipTemplateParameterPrompt will ignore this prompt and " +
+        # "error out immediately if a parameter was found not to be bound in the template. For non-interactive scripts, -SkipTemplateParameterPrompt can be provided " +
+        # "to provide a better error message in the case where not all required parameters are satisfied.")]
+        # [switch]
+        # ${SkipTemplateParameterPrompt},
 
         [Parameter(HelpMessage = "Do not ask for confirmation when overwriting an existing stack.")]
         [switch]
         ${Force},
 
-        # [Parameter(DontShow)]
-        # [Parameter(HelpMessage = 'Run the command as a job.')]
-        # [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
-        # [switch]
-        # ${AsJob},
+        #[Parameter(DontShow)]
+        #[Parameter(HelpMessage = 'Run the command as a job.')]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
+        [switch]
+        ${AsJob},
 
         [Parameter(DontShow)]
         [ValidateNotNull()]
@@ -142,11 +143,11 @@ function New-AzSubscriptionDeploymentStackCustom {
         # SendAsync Pipeline Steps to be prepended to the front of the pipeline.
         ${HttpPipelinePrepend},
 
-        # [Parameter(DontShow)]
-        # [Parameter(HelpMessage = 'Run the command asynchronously.')]
-        # [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
-        # [switch]
-        # ${NoWait},
+        [Parameter(DontShow)]
+        #[Parameter(HelpMessage = 'Run the command asynchronously.')]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
+        [switch]
+        ${NoWait},
 
         [Parameter(DontShow)]
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
@@ -170,38 +171,13 @@ function New-AzSubscriptionDeploymentStackCustom {
 
     process {
         try{
-            # -------------------------------------------------- Resolve Template Data --------------------------------------------------
+            # -------------------------------------------------- Resolve Template Data -------------------------------------------------- 
             if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
-                
-                try {
-                    $resolvedTemplateFilePath = (Resolve-Path $TemplateFile).Path
-                } catch {
-                    # TODO: Throw a custom error for file not found
-                    throw "Error: file was not found"    
-                }
-
-                $fileType = (Get-Item $resolvedTemplateFilePath).Extension
-                
-                # If a bicep file was passed in, we need to compile it down to json:
-                if ($fileType -eq ".bicep")
-                {
-                    # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell
-                    throw "Error: not currently accepting bicep files."
-                }
-                
-                # If the file type passed in is not supported:
-                if ($fileType -ne ".json")
-                {
-                    # TODO: Throw a custom error for bad file extension
-                    throw "Error: bad file extension."
-                }
-
-                $template = Get-Content -Raw $resolvedTemplateFilePath | ConvertFrom-Json
+                $template = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateFile"]
                 $PSBoundParameters.Add("Template", $template)
                 $null = $PSBoundParameters.Remove('TemplateFile')
 
             } elseif ($PSBoundParameters.ContainsKey("TemplateUri")) {
-                
                 $templateUri = $PSBoundParameters["TemplateUri"]
                 if ($PSBoundParameters.ContainsKey("QueryString"))
                 {
@@ -217,47 +193,21 @@ function New-AzSubscriptionDeploymentStackCustom {
                 $null = $PSBoundParameters.Remove("TemplateUri")
 
             } elseif ($PSBoundParameters.ContainsKey("TemplateSpecId")) {
-                
                 $PSBoundParameters["TemplateLinkId"] = $PSBoundParameters["TemplateSpecId"]
                 $null = $PSBoundParameters.Remove("TemplateSpecId")
 
             } else {
-                # TODO: Throw a better error
+                # TODO: Throw a better error, though I don't think this can happen with parameter set as they are
                 throw "Error: no template provided."
             }
             
             # -------------------------------------------------- Resolve Template Parameter Data --------------------------------------------------
-            if ($PSBoundParameters.ContainsKey("TemplateParameterFile")) {
-                
-                try {
-                    $resolvedTemplateParameterFilePath = (Resolve-Path $TemplateFile).Path
-                } catch {
-                    # TODO: Throw a custom error for file not found
-                    throw "Error: file was not found"        
-                }
-
-                $fileType = (Get-Item $resolvedTemplateParameterFilePath).Extension
-                
-                # If a bicep file was passed in, we need to compile it down to json:
-                if ($fileType -eq ".bicep")
-                {
-                    # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell
-                    throw "Error: not currently accepting bicep files."
-                }
-                
-                # If the file type passed in is not supported:
-                if ($fileType -ne ".json")
-                {
-                    # TODO: Throw a custom error for bad file extension
-                    throw "Error: bad file extension."
-                }
-
-                $parameters = Get-Content -Raw $resolvedTemplateFilePath | ConvertFrom-Json
+            if ($PSBoundParameters.ContainsKey("TemplateParameterFile")) {  
+                $parameters = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateParameterFile"]
                 $PSBoundParameters["Parameters"] = $parameters
                 $null = $PSBoundParameters.Remove("TemplateParameterFile")
 
             } elseif ($PSBoundParameters.ContainsKey("TemplateParameterObject")) {
-                
                 $PSBoundParameters["Parameters"] = $PSBoundParameters["TemplateParameterObject"]
                 $null = $PSBoundParameters.Remove("TemplateParameterObject")
 
@@ -265,57 +215,66 @@ function New-AzSubscriptionDeploymentStackCustom {
                 $PSBoundParameters["ParameterLinkUri"] = $PSBoundParameters["TemplateParameterUri"]
                 $null = $PSBoundParameters.Remove("TemplateParameterUri")
             }
-
             
             # -------------------------------------------------- Populate ActionOnUnmange Fields --------------------------------------------------
-            # TODO: May need to explictly cast detach?
             $resourcesCleanupAction = "detach"
             $resourceGroupsCleanupAction = "detach"
+
+            $shouldDeleteResources = $PSBoundParameters.ContainsKey('DeleteResources') -or $PSBoundParameters.ContainsKey('DeleteAll')
+            $shouldDeleteResourceGroups = $PSBoundParameters.ContainsKey('DeleteResourceGroups') -or $PSBoundParameters.ContainsKey('DeleteAll')
+
+            $null = $PSBoundParameters.Remove('DeleteResources')
+            $null = $PSBoundParameters.Remove('DeleteResourceGroups')
+            $null = $PSBoundParameters.Remove('DeleteAll')
             
-            if ($PSBoundParameters.ContainsKey('DeleteResources')) {
+            if ($shouldDeleteResources) {
                 $resourcesCleanupAction = "delete"
-                $null = $PSBoundParameters.Remove('DeleteResources')
             }
 
-            if ($PSBoundParameters.ContainsKey('DeleteResourceGroups')) {
+            if ($shouldDeleteResourceGroups) {
                 $resourceGroupsCleanupAction = "delete"
-                $null = $PSBoundParameters.Remove('DeleteResourceGroups')
-            }
-            
-            if ($PSBoundParameters.ContainsKey('DeleteAll')) {
-                $resourcesCleanupAction = "delete"
-                $resourceGroupsCleanupAction = "delete"
-                $null = $PSBoundParameters.Remove('DeleteAll')
             }
 
             $PSBoundParameters["ActionOnUnmanageResource"] = $resourcesCleanupAction
             $PSBoundParameters["ActionOnUnmanageResourceGroup"] = $resourceGroupsCleanupAction
-            # Always detach, as delete functionality is not implemented
+            # Always detach MG, as delete functionality is not implemented
             $PSBoundParameters["ActionOnUnmanageManagementGroup"] = "detach"
 
-            # -------------------------------------------------- Populate Deployment Scope --------------------------------------------------
+            # -------------------------------------------------- Populate Deny Setting Variables --------------------------------------------------
+            $PSBoundParameters["DenySettingMode"] = $PSBoundParameters["DenySettingsMode"]
+            $null = $PSBoundParameters.Remove("DenySettingsMode")
 
+            if ($PSBoundParameters.ContainsKey("DenySettingsExcludedPrincipal")) {
+                $PSBoundParameters["DenySettingExcludedPrincipal"] = $PSBoundParameters["DenySettingsExcludedPrincipal"]
+                $null = $PSBoundParameters.Remove("DenySettingsExcludedPrincipal")
+            }
+
+            if ($PSBoundParameters.ContainsKey("DenySettingsExcludedAction")) {
+                $PSBoundParameters["DenySettingExcludedAction"] = $PSBoundParameters["DenySettingsExcludedAction"]
+                $null = $PSBoundParameters.Remove("DenySettingsExcludedAction")
+            }
+
+            if ($PSBoundParameters.ContainsKey("DenySettingsApplyToChildScopes")) {
+                $PSBoundParameters["DenySettingApplyToChildScope"] = $PSBoundParameters["DenySettingsApplyToChildScopes"]
+                $null = $PSBoundParameters.Remove("DenySettingsApplyToChildScopes")
+            }
+
+            # -------------------------------------------------- Populate Deployment Scope --------------------------------------------------
             if ($PSBoundParameters.ContainsKey("DeploymentResourceGroupName")) {
                 $currentSub = (Get-AzContext).Subscription.Id
                 $PSBoundParameters["DeploymentScope"] = "/subscription/" + $currentSub + "/resourceGroups/" + $PSBoundParameters["DeploymentResourceGroupName"]
                 $null = $PSBoundParameters.Remove("DeploymentResourceGroupName")
             }
-            # -------------------------------------------------- Extract Flags for Confirmation --------------------------------------------------
 
-            $skipTemplateParameterPrompt = $false
-            if ($PSBoundParameters.ContainsKey('SkipTemplateParameterPrompt')) {
-                $skipTemplateParameterPrompt = $true
-                $null = $PSBoundParameters.Remove('SkipTemplateParameterPrompt')
-            }
-            
-            $force = $false
-            if ($PSBoundParameters.ContainsKey('Force')) {
-                $Force = $true
-                $null = $PSBoundParameters.Remove('Force')
-            }
+            # -------------------------------------------------- Extract Flags for Confirmation --------------------------------------------------
+            # TODO: Will be needed potentially in Dynamic Parameters
+            # $skipTemplateParameterPrompt = $false
+            # if ($PSBoundParameters.ContainsKey('SkipTemplateParameterPrompt')) {
+            #     $skipTemplateParameterPrompt = $true
+            #     $null = $PSBoundParameters.Remove('SkipTemplateParameterPrompt')
+            # }
 
             # -------------------------------------------------- Retrieve Existing Stack --------------------------------------------------
-            
             $name = $PSBoundParameters['Name']
             try {   
                 $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom $name
@@ -324,30 +283,33 @@ function New-AzSubscriptionDeploymentStackCustom {
             }
 
             # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
-
-            if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
-                $PSBoundParameters["Tag"] = $currentStack.Tag
-            }
-
-            # -------------------------------------------------- Dyanmic Parameters --------------------------------------------------
-
-            # TODO: Will need to be built out by the PowerShell team
+            # if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
+            #     # TODO: Not sure about types
+            #     $PSBoundParameters["Tag"] = $currentStack.Tag
+            # }
 
             # -------------------------------------------------- Upsert Stack --------------------------------------------------
+            $force = $PSBoundParameters.ContainsKey('Force')
+            $null = $PSBoundParameters.Remove("Force")
 
-            if ($null -ne $currentStack) {
-                if (Az.DeploymentStacks.custom\Confirmation "test") {
-                    "Here"
+            if (($null -ne $currentStack) -or $force) {
+                $warningMessage = "Are you sure you want to remove Subscription scoped DeploymentStack '{$name}' in current Subscription with the following actions?" 
+                $warning = StackExistsWarning $warningMessage $PSBoundParameters.ContainsKey('DeleteResources') $PSBoundParameters.ContainsKey('DeleteResourceGroups')
+                if (Confirmation $warning) {
+                    # TODO: Inplement cofirmation logic, looping
+                    Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters -Break
                 } 
             } else {
-                "There"
+                Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters -Break
             }
 
             # -------------------------------------------------- Polling For Completion --------------------------------------------------
 
             # TODO: Requires more code to be rewritten
 
-            # $PSBoundParameters
+            # -------------------------------------------------- Error Validation + Printing Error --------------------------------------------------
+
+            $PSBoundParameters
         }
         catch {
             throw
