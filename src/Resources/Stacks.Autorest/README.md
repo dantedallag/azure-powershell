@@ -43,7 +43,6 @@ resourcegroup-append: true
 default-exclude-tableview-properties: false
 
 directive:
-      
   # Remove "Create", "CreateViaIdentity", "CreateViaIdentityExpanded" syntax variant of the cmdlets. Because of new cmdlet does unsupport.
   - where:
       verb: New
@@ -53,4 +52,10 @@ directive:
       verb: Get
       subject: DeploymentStack
     hide: true
+  - from: swagger-document
+    where: $.definitions.DeploymentStackProperties.properties.template
+    transform: $['additionalProperties'] = true;
+  - from: swagger-document
+    where: $.definitions.DeploymentStackProperties.properties.parameters
+    transform: $['additionalProperties'] = true;
 ```
