@@ -14,7 +14,7 @@
 
 function New-AzSubscriptionDeploymentStackCustom {
     [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack])]
-    [CmdletBinding(DefaultParameterSetName='ByTemplateFileWithNoParameters', PositionalBinding=$false, SupportsShouldProcess, ConfirmImpact='Medium')]
+    [CmdletBinding(DefaultParameterSetName='ByTemplateFileWithNoParameters', PositionalBinding=$false, SupportsShouldProcess, ConfirmImpact='High')]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Creates a new subscription scoped deployment stack')]
     param(
         [Parameter(Mandatory, ParameterSetName = 'ByTemplateFileWithNoParameters', HelpMessage = 'TemplateFile to be used to create the stack.')]
@@ -82,6 +82,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
+        # Question: There is an enum type that gets generated, but I don't 
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.PSDenySettingsMode] 
         ${DenySettingsMode},
 
@@ -99,7 +100,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DenySettingsApplyToChildScopes},
 
         [Parameter(HelpMessage = "The tags to put on the deployment.")]
-        [System.Collections.Hashtable]
+        [hashtable]
         ${Tag},
 
         [Parameter(HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
@@ -111,19 +112,10 @@ function New-AzSubscriptionDeploymentStackCustom {
         [string]
         ${DeploymentResourceGroupName},
 
-        # TODO: Will be needed potentially in Dynamic Parameters
-        # [Parameter(HelpMessage = "Skips the PowerShell dynamic parameter processing that checks if the provided template parameter contains all necessary parameters used by the template. " +
-        # "This check would prompt the user to provide a value for the missing parameters, but providing the -SkipTemplateParameterPrompt will ignore this prompt and " +
-        # "error out immediately if a parameter was found not to be bound in the template. For non-interactive scripts, -SkipTemplateParameterPrompt can be provided " +
-        # "to provide a better error message in the case where not all required parameters are satisfied.")]
-        # [switch]
-        # ${SkipTemplateParameterPrompt},
-
         [Parameter(HelpMessage = "Do not ask for confirmation when overwriting an existing stack.")]
         [switch]
         ${Force},
 
-        #[Parameter(DontShow)]
         #[Parameter(HelpMessage = 'Run the command as a job.')]
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
         [switch]
@@ -170,6 +162,7 @@ function New-AzSubscriptionDeploymentStackCustom {
     )
 
     process {
+        # TODO: Currently do not handle Bicep files.
         try{
             # -------------------------------------------------- Resolve Template Data -------------------------------------------------- 
             if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
@@ -197,8 +190,7 @@ function New-AzSubscriptionDeploymentStackCustom {
                 $null = $PSBoundParameters.Remove("TemplateSpecId")
 
             } else {
-                # TODO: Throw a better error, though I don't think this can happen with parameter set as they are
-                throw "Error: no template provided."
+                throw "Error: A TemplateFile, TemplateUri, or TemplateSpecId must be provided."
             }
             
             # -------------------------------------------------- Resolve Template Parameter Data --------------------------------------------------
@@ -237,12 +229,14 @@ function New-AzSubscriptionDeploymentStackCustom {
 
             $PSBoundParameters["ActionOnUnmanageResource"] = $resourcesCleanupAction
             $PSBoundParameters["ActionOnUnmanageResourceGroup"] = $resourceGroupsCleanupAction
-            # Always detach MG, as delete functionality is not implemented
+            # Always detach MG, as delete functionality is not implemented.
             $PSBoundParameters["ActionOnUnmanageManagementGroup"] = "detach"
 
             # -------------------------------------------------- Populate Deny Setting Variables --------------------------------------------------
             $PSBoundParameters["DenySettingMode"] = $PSBoundParameters["DenySettingsMode"]
             $null = $PSBoundParameters.Remove("DenySettingsMode")
+
+            # TODO: Can probably get rid of these once I write a directive to change the properties in the generated cmdlet.
 
             if ($PSBoundParameters.ContainsKey("DenySettingsExcludedPrincipal")) {
                 $PSBoundParameters["DenySettingExcludedPrincipal"] = $PSBoundParameters["DenySettingsExcludedPrincipal"]
@@ -266,50 +260,57 @@ function New-AzSubscriptionDeploymentStackCustom {
                 $null = $PSBoundParameters.Remove("DeploymentResourceGroupName")
             }
 
-            # -------------------------------------------------- Extract Flags for Confirmation --------------------------------------------------
-            # TODO: Will be needed potentially in Dynamic Parameters
-            # $skipTemplateParameterPrompt = $false
-            # if ($PSBoundParameters.ContainsKey('SkipTemplateParameterPrompt')) {
-            #     $skipTemplateParameterPrompt = $true
-            #     $null = $PSBoundParameters.Remove('SkipTemplateParameterPrompt')
-            # }
-
             # -------------------------------------------------- Retrieve Existing Stack --------------------------------------------------
-            $name = $PSBoundParameters['Name']
-            try {   
-                $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom $name
-            } catch {
-                # TODO: Should catch not found errors here
+            # Question: What is the best way to propagate required parameters as well as -Debug (when needed) to cmdlets we are calling?      
+            $getParameters = @{}
+            $getParameters['Name'] = $PSBoundParameters['Name']
+            if ($PSBoundParameters.ContainsKey("HttpPipelineAppend")) {
+                $getParameters['HttpPipelineAppend'] = $PSBoundParameters['HttpPipelineAppend']
             }
-
+            if ($PSBoundParameters.ContainsKey("HttpPipelinePrepend")) {
+                $getParameters['HttpPipelinePrepend'] = $PSBoundParameters['HttpPipelinePrepend']            
+            }
+            if ($PSBoundParameters.ContainsKey("NoWait")) {
+                $getParameters['NoWait'] = $PSBoundParameters['NoWait']
+            }
+            if ($PSBoundParameters.ContainsKey("Proxy")) {
+                $getParameters['Proxy'] = $PSBoundParameters['Proxy']
+            }
+            if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
+                $getParameters['ProxyCredential'] = $PSBoundParameters['ProxyCredential']
+            }
+            if ($PSBoundParameters.ContainsKey("ProxyUseDefaultCredential")) {
+                $getParameters['ProxyUseDefaultCredentials'] = $PSBoundParameters['ProxyyUseDefaultCredentials']
+            }
+            
+            try {   
+                $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
+            } catch {
+                # Question: Is there a better way to catch this?
+                if ($_.Exception.Code -ne "ResourceNotFound") {
+                    throw 
+                }    
+            }
             # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
+            
+            # TODO: Figure out typing here. 
+            
             # if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
-            #     # TODO: Not sure about types
-            #     $PSBoundParameters["Tag"] = $currentStack.Tag
+                # TODO: figure out type differences.
+                # $PSBoundParameters["Tag"] = $currentStack.Tag
             # }
 
             # -------------------------------------------------- Upsert Stack --------------------------------------------------
+            # Question: Should force be propagated to the underlying cmdlet?
             $force = $PSBoundParameters.ContainsKey('Force')
             $null = $PSBoundParameters.Remove("Force")
-
-            if (($null -ne $currentStack) -or $force) {
-                $warningMessage = "Are you sure you want to remove Subscription scoped DeploymentStack '{$name}' in current Subscription with the following actions?" 
-                $warning = StackExistsWarning $warningMessage $PSBoundParameters.ContainsKey('DeleteResources') $PSBoundParameters.ContainsKey('DeleteResourceGroups')
-                if (Confirmation $warning) {
-                    # TODO: Inplement cofirmation logic, looping
-                    Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters -Break
-                } 
-            } else {
-                Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters -Break
+            
+            $warningMessage = "Are you sure you want to remove Subscription scoped DeploymentStack '{$name}' in current Subscription with the following actions?" 
+            $warning = StackExistsWarning $warningMessage $PSBoundParameters.ContainsKey('DeleteResources') $PSBoundParameters.ContainsKey('DeleteResourceGroups')
+            
+            if (($currentStack -eq $null) -or $force -or ($PsCmdlet.ShouldProcess($warning))) {
+                Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
             }
-
-            # -------------------------------------------------- Polling For Completion --------------------------------------------------
-
-            # TODO: Requires more code to be rewritten
-
-            # -------------------------------------------------- Error Validation + Printing Error --------------------------------------------------
-
-            $PSBoundParameters
         }
         catch {
             throw

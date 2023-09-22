@@ -43,7 +43,7 @@ resourcegroup-append: true
 default-exclude-tableview-properties: false
 
 directive:
-  # Remove "Create", "CreateViaIdentity", "CreateViaIdentityExpanded" syntax variant of the cmdlets. Because of new cmdlet does unsupport.
+  # Hide default generated cmdlets:
   - where:
       verb: New
       subject: DeploymentStack
@@ -52,10 +52,54 @@ directive:
       verb: Get
       subject: DeploymentStack
     hide: true
+  - where:
+      verb: Export
+      subject: DeploymentStack
+    hide: true
+  - where:
+      verb: Delete
+      subject: DeploymentStack
+    hide: true
+  - where:
+      verb: Set
+      subject: DeploymentStack
+    hide: true
+
+  # Fix Deny Setting parameter names:
+  - where:
+      parameter-name: DenySettingMode
+    set:
+      parameter-name: DenySettingsMode
+  - where:
+      parameter-name: DenySettingExcludedPrincipal
+    set:
+      parameter-name: DenySettingsExcludedPrincipal
+  - where:
+      parameter-name: DenySettingExcludedAction
+    set:
+      parameter-name: DenySettingsExcludedAction
+  - where:
+      parameter-name: DenySettingApplyToChildScope
+    set:
+      parameter-name: DenySettingsApplyToChildScopes
+
+  # Changes for models to generate hashtables:
   - from: swagger-document
     where: $.definitions.DeploymentStackProperties.properties.template
     transform: $['additionalProperties'] = true;
   - from: swagger-document
     where: $.definitions.DeploymentStackProperties.properties.parameters
     transform: $['additionalProperties'] = true;
+
+  # - where:
+  #   model-name: DeploymentStack
+  # set:
+  #   format-table:
+  #     properties:
+  #       - Resources
+  #     ScriptBlock:
+  #       ResourceGroup: Resource Group
+  #     width:
+  #       Name: 60
+  #       ResourceGroup: 80
 ```

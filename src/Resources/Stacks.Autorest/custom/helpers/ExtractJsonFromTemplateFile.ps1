@@ -16,7 +16,7 @@ function ExtractJsonFromTemplateFile {
     [OutputType([string])]
     [CmdletBinding(PositionalBinding)]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
-    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Extracts json string from template file')]
+    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Extracts json string from template ot template parameter file')]
     param(
         [Parameter(Position = 0, Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -36,12 +36,12 @@ function ExtractJsonFromTemplateFile {
         
         # If a bicep file was passed in, we need to compile it down to json:
         if ($fileType -eq ".bicep") {
-            # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell
+            # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell.
             throw "Error: not currently accepting bicep files."
         }
 
         if ($fileType -eq ".bicepparam") {
-            # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell
+            # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell.
             throw "Error: not currently accepting bicep files."
         }
         
@@ -49,10 +49,10 @@ function ExtractJsonFromTemplateFile {
         if ($fileType -ne ".json")
         {
             # TODO: Throw a custom error for bad file extension
-            throw "Error: bad file extension."
+            throw "Error: Unsupported file type."
         }
 
-        $template = Get-Content -Raw $resolvedTemplateFilePath
+        $template = Get-Content -Raw $resolvedTemplateFilePath | ConvertFrom-Json -AsHashtable
         $template
     }
 }
