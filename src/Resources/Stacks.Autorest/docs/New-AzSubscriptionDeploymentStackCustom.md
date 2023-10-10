@@ -18,8 +18,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateFile <String> [-DeleteAll] [-DeleteResourceGroups] [-DeleteResources]
  [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateFileWithParameterFile
@@ -28,8 +27,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateFile <String> -TemplateParameterFile <String> [-DeleteAll] [-DeleteResourceGroups]
  [-DeleteResources] [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateFileWithParameterObject
@@ -39,7 +37,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  [-DeleteResourceGroups] [-DeleteResources] [-DenySettingsApplyToChildScopes]
  [-DenySettingsExcludedAction <String[]>] [-DenySettingsExcludedPrincipal <String[]>]
  [-DeploymentResourceGroupName <String>] [-Description <String>] [-Force] [-QueryString <String>]
- [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateFileWithParameterUri
@@ -48,8 +46,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateFile <String> -TemplateParameterUri <String> [-DeleteAll] [-DeleteResourceGroups]
  [-DeleteResources] [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateSpecWithNoParameters
@@ -58,8 +55,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateSpecId <String> [-DeleteAll] [-DeleteResourceGroups] [-DeleteResources]
  [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateSpecWithParameterFile
@@ -68,8 +64,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateSpecId <String> [-DeleteAll] [-DeleteResourceGroups] [-DeleteResources]
  [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateSpecWithParameterObject
@@ -79,7 +74,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  [-DeleteResourceGroups] [-DeleteResources] [-DenySettingsApplyToChildScopes]
  [-DenySettingsExcludedAction <String[]>] [-DenySettingsExcludedPrincipal <String[]>]
  [-DeploymentResourceGroupName <String>] [-Description <String>] [-Force] [-QueryString <String>]
- [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateSpecWithParameterUri
@@ -89,7 +84,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  [-DeleteAll] [-DeleteResourceGroups] [-DeleteResources] [-DenySettingsApplyToChildScopes]
  [-DenySettingsExcludedAction <String[]>] [-DenySettingsExcludedPrincipal <String[]>]
  [-DeploymentResourceGroupName <String>] [-Description <String>] [-Force] [-QueryString <String>]
- [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateUriWithNoParameters
@@ -98,8 +93,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateUri <String> [-DeleteAll] [-DeleteResourceGroups] [-DeleteResources]
  [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateUriWithParameterFile
@@ -108,8 +102,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateParameterFile <String> -TemplateUri <String> [-DeleteAll] [-DeleteResourceGroups]
  [-DeleteResources] [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateUriWithParameterObject
@@ -119,7 +112,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  [-DeleteResourceGroups] [-DeleteResources] [-DenySettingsApplyToChildScopes]
  [-DenySettingsExcludedAction <String[]>] [-DenySettingsExcludedPrincipal <String[]>]
  [-DeploymentResourceGroupName <String>] [-Description <String>] [-Force] [-QueryString <String>]
- [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ByTemplateUriWithParameterUri
@@ -128,8 +121,7 @@ New-AzSubscriptionDeploymentStackCustom -DenySettingsMode <PSDenySettingsMode> -
  -Name <String> -TemplateParameterUri <String> -TemplateUri <String> [-DeleteAll] [-DeleteResourceGroups]
  [-DeleteResources] [-DenySettingsApplyToChildScopes] [-DenySettingsExcludedAction <String[]>]
  [-DenySettingsExcludedPrincipal <String[]>] [-DeploymentResourceGroupName <String>] [-Description <String>]
- [-Force] [-QueryString <String>] [-SkipTemplateParameterPrompt] [-Tag <Hashtable>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+ [-Force] [-QueryString <String>] [-Tag <Hashtable>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -351,23 +343,6 @@ Would be used in case of linked templates
 
 ```yaml
 Type: System.String
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -SkipTemplateParameterPrompt
-Skips the PowerShell dynamic parameter processing that checks if the provided template parameter contains all necessary parameters used by the template.
-This check would prompt the user to provide a value for the missing parameters, but providing the -SkipTemplateParameterPrompt will ignore this prompt and error out immediately if a parameter was found not to be bound in the template.
-For non-interactive scripts, -SkipTemplateParameterPrompt can be provided to provide a better error message in the case where not all required parameters are satisfied.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
 Parameter Sets: (All)
 Aliases:
 

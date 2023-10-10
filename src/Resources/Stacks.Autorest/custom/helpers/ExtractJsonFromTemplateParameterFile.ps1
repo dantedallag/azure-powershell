@@ -12,11 +12,11 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------------
 
-function ExtractJsonFromTemplateFile {
+function ExtractJsonFromTemplateParameterFile {
     [OutputType([hashtable])]
     [CmdletBinding(PositionalBinding)]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
-    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description("Extracts template as hashtable from template file.")]
+    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Extracts parameters as hashtable from template parameter file')]
     param(
         [Parameter(Position = 0, Mandatory)]
         [ValidateNotNullOrEmpty()]
@@ -28,18 +28,18 @@ function ExtractJsonFromTemplateFile {
         $resolvedTemplateFilePath = (Resolve-Path $File).Path
         $fileType = (Get-Item $resolvedTemplateFilePath).Extension
         
-        if ($fileType -eq ".bicep") {
-            # TODO: Convert if a Bicep file, which will require implementation of the Bicep utility in PowerShell.
+        if ($fileType -eq ".bicepparam") {
+            # TODO: implementation of the Bicep utility in PowerShell.
             throw "Error: not currently accepting bicep files."
         }
         
         # If the file type passed in is not supported:
         if ($fileType -ne ".json")
         {
-            throw "Error: unsupported template file type."
+            throw "Error: unsupported template parameter file type."
         }
 
-        $template = Get-Content -Raw $resolvedTemplateFilePath | ConvertFrom-Json -AsHashtable
-        $template
+        $templateParams = Get-Content -Raw $resolvedTemplateFilePath | ConvertFrom-Json -AsHashtable
+        $templateParams
     }
 }

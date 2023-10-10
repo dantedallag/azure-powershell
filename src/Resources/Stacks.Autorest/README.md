@@ -54,10 +54,10 @@ directive:
     hide: true
   - where:
       verb: Export
-      subject: DeploymentStack
+      subject: DeploymentStackTemplate
     hide: true
   - where:
-      verb: Delete
+      verb: Remove
       subject: DeploymentStack
     hide: true
   - where:
@@ -89,6 +89,9 @@ directive:
     transform: $['additionalProperties'] = true;
   - from: swagger-document
     where: $.definitions.DeploymentStackProperties.properties.parameters
+    transform: $['additionalProperties'] = true;
+  - from: swagger-document
+    where: $.definitions.DeploymentStackTemplateDefinition.properties.template
     transform: $['additionalProperties'] = true;
 
   # - where:

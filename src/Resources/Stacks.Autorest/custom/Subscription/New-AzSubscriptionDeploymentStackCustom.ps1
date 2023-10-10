@@ -116,10 +116,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         [switch]
         ${Force},
 
-        #[Parameter(HelpMessage = 'Run the command as a job.')]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Category('Runtime')]
-        [switch]
-        ${AsJob},
+        # ---------- Internal parameters ----------
 
         [Parameter(DontShow)]
         [ValidateNotNull()]
@@ -162,7 +159,7 @@ function New-AzSubscriptionDeploymentStackCustom {
     )
 
     process {
-        # TODO: Currently do not handle Bicep files.
+        # TODO: Currently does not handle Bicep files.
         try{
             # -------------------------------------------------- Resolve Template Data -------------------------------------------------- 
             if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
@@ -195,12 +192,12 @@ function New-AzSubscriptionDeploymentStackCustom {
             
             # -------------------------------------------------- Resolve Template Parameter Data --------------------------------------------------
             if ($PSBoundParameters.ContainsKey("TemplateParameterFile")) {  
-                $parameters = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateParameterFile"]
-                $PSBoundParameters["Parameters"] = $parameters
+                $parameters = ExtractJsonFromTemplateParameterFile $PSBoundParameters["TemplateParameterFile"]
+                $PSBoundParameters["Parameter"] = $parameters
                 $null = $PSBoundParameters.Remove("TemplateParameterFile")
 
             } elseif ($PSBoundParameters.ContainsKey("TemplateParameterObject")) {
-                $PSBoundParameters["Parameters"] = $PSBoundParameters["TemplateParameterObject"]
+                $PSBoundParameters["Parameter"] = $PSBoundParameters["TemplateParameterObject"]
                 $null = $PSBoundParameters.Remove("TemplateParameterObject")
 
             } elseif ($PSBoundParameters.ContainsKey("TemplateParameterUri")) {
@@ -231,27 +228,6 @@ function New-AzSubscriptionDeploymentStackCustom {
             $PSBoundParameters["ActionOnUnmanageResourceGroup"] = $resourceGroupsCleanupAction
             # Always detach MG, as delete functionality is not implemented.
             $PSBoundParameters["ActionOnUnmanageManagementGroup"] = "detach"
-
-            # -------------------------------------------------- Populate Deny Setting Variables --------------------------------------------------
-            $PSBoundParameters["DenySettingMode"] = $PSBoundParameters["DenySettingsMode"]
-            $null = $PSBoundParameters.Remove("DenySettingsMode")
-
-            # TODO: Can probably get rid of these once I write a directive to change the properties in the generated cmdlet.
-
-            if ($PSBoundParameters.ContainsKey("DenySettingsExcludedPrincipal")) {
-                $PSBoundParameters["DenySettingExcludedPrincipal"] = $PSBoundParameters["DenySettingsExcludedPrincipal"]
-                $null = $PSBoundParameters.Remove("DenySettingsExcludedPrincipal")
-            }
-
-            if ($PSBoundParameters.ContainsKey("DenySettingsExcludedAction")) {
-                $PSBoundParameters["DenySettingExcludedAction"] = $PSBoundParameters["DenySettingsExcludedAction"]
-                $null = $PSBoundParameters.Remove("DenySettingsExcludedAction")
-            }
-
-            if ($PSBoundParameters.ContainsKey("DenySettingsApplyToChildScopes")) {
-                $PSBoundParameters["DenySettingApplyToChildScope"] = $PSBoundParameters["DenySettingsApplyToChildScopes"]
-                $null = $PSBoundParameters.Remove("DenySettingsApplyToChildScopes")
-            }
 
             # -------------------------------------------------- Populate Deployment Scope --------------------------------------------------
             if ($PSBoundParameters.ContainsKey("DeploymentResourceGroupName")) {
@@ -301,14 +277,11 @@ function New-AzSubscriptionDeploymentStackCustom {
             # }
 
             # -------------------------------------------------- Upsert Stack --------------------------------------------------
-            # Question: Should force be propagated to the underlying cmdlet?
-            $force = $PSBoundParameters.ContainsKey('Force')
-            $null = $PSBoundParameters.Remove("Force")
+            # TODO: Work on to how to say this so it works better with ShouldProcess prompt.
+            $warningMessage = "Overwrite Subscription scoped DeploymentStack in current Subscription with the following actions:" 
+            $warning = StackExistsWarning $warningMessage $shouldDeleteResources $shouldDeleteResourceGroups
             
-            $warningMessage = "Are you sure you want to remove Subscription scoped DeploymentStack '{$name}' in current Subscription with the following actions?" 
-            $warning = StackExistsWarning $warningMessage $PSBoundParameters.ContainsKey('DeleteResources') $PSBoundParameters.ContainsKey('DeleteResourceGroups')
-            
-            if (($currentStack -eq $null) -or $force -or ($PsCmdlet.ShouldProcess($warning))) {
+            if (($null -eq $currentStack) -or $PSBoundParameters.ContainsKey('Force') -or ($PsCmdlet.ShouldProcess($PSBoundParameters["Name"], $warning))) {
                 Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
             }
         }
