@@ -17,7 +17,7 @@ This directory contains the PowerShell module for the DeploymentStacks service.
 This module was primarily generated via [AutoRest](https://github.com/Azure/autorest) using the [PowerShell](https://github.com/Azure/autorest.powershell) extension.
 
 ## Module Requirements
-- [Az.Accounts module](https://www.powershellgallery.com/packages/Az.Accounts/), version 2.7.5 or greater
+- [Az.Accounts module](https://www.powershellgallery.com/packages/Az.Accounts/), version 2.2.3 or greater
 
 ## Authentication
 AutoRest does not generate authentication code for the module. Authentication is handled via Az.Accounts by altering the HTTP payload before it is sent.
@@ -94,15 +94,125 @@ directive:
     where: $.definitions.DeploymentStackTemplateDefinition.properties.template
     transform: $['additionalProperties'] = true;
 
+  # Deployment Stack model property renames:
+
+  # Top level Error renames:
+  - where:
+      model-name: DeploymentStack
+      property-name: Code
+    set:
+      property-name: ErrorCode
+  - where:
+      model-name: DeploymentStack
+      property-name: Message
+    set:
+      property-name: ErrorMessage
+  - where:
+      model-name: DeploymentStack
+      property-name: Target
+    set:
+      property-name: ErrorTarget
+
+  # ActionOnUnmange renames:
+  - where:
+      model-name: DeploymentStack
+      property-name: ActionOnUnmanageResourceGroup
+    set:
+      property-name: ResourceGroupsCleanupAction
+  - where:
+      model-name: DeploymentStack
+      property-name: ActionOnUnmanageResource
+    set:
+      property-name: ResourcesCleaunupAction
+  - where:
+      model-name: DeploymentStack
+      property-name: ActionOnUnmanageManagementGroup
+    set:
+      property-name: ManagementGroupCleanupAction
+
+  # List renames to plural:
+  - where:
+      model-name: DeploymentStack
+      property-name: Resource
+    set:
+      property-name: Resources
+  - where:
+      model-name: DeploymentStack
+      property-name: FailedResource
+    set:
+      property-name: FailedResources
+  - where:
+      model-name: DeploymentStack
+      property-name: DetachedResource
+    set:
+      property-name: DetachedResources
+  - where:
+      model-name: DeploymentStack
+      property-name: DeletedResource
+    set:
+      property-name: DeletedResources
+  - where:
+      model-name: DeploymentStack
+      property-name: DenySettingMode
+    set:
+      property-name: DenySettingsMode
+  - where:
+      model-name: DeploymentStack
+      property-name: DenySettingApplyToChildScope
+    set:
+      property-name: DenySettingsApplyToChildScopes
+  - where:
+      model-name: DeploymentStack
+      property-name: DenySettingExcludedAction
+    set:
+      property-name: DenySettingsExcludedActions
+  - where:
+      model-name: DeploymentStack
+      property-name: DenySettingExcludedPrincipal
+    set:
+      property-name: DenySettingsExcludedPrincipals  
+  - where:
+      model-name: DeploymentStack
+      property-name: Parameter
+    set:
+      property-name: Parameters
+  - where:
+      model-name: DeploymentStack
+      property-name: ParameterLinkUri
+    set:
+      property-name: ParametersLinkUri
+  - where:
+      model-name: DeploymentStack
+      property-name: ParameterLinkContentVersion
+    set:
+      property-name: ParametersLinkContentVersion
+  - where:
+      model-name: DeploymentStack
+      property-name: Tag
+    set:
+      property-name: Tags
+  - where:
+      model-name: DeploymentStack
+      property-name: Output
+    set:
+      property-name: Outputs
+
+  - where:
+      parameter-name: Tag
+    set:
+      type: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStackTag
+
+
+# TODO: We need to get insight on the best way to adjust the view for the stack model
   # - where:
-  #   model-name: DeploymentStack
-  # set:
-  #   format-table:
-  #     properties:
-  #       - Resources
-  #     ScriptBlock:
-  #       ResourceGroup: Resource Group
-  #     width:
-  #       Name: 60
-  #       ResourceGroup: 80
+  #     model-name: DeploymentStack
+  #   set:
+  #     format-table:
+  #       properties:
+  #       - Name
+  #       - DenySettingsMode
+  #       - FailedResources
+  #       labels:
+  #         Name: Name
+  #         DenySettingsMode: DenySettingsMode
 ```

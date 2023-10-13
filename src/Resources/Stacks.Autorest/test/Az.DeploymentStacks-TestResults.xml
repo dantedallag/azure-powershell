@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="3" errors="0" failures="0" not-run="0" inconclusive="0" ignored="15" skipped="0" invalid="0" date="2023-10-12" time="14:10:49">
+  <environment platform="Microsoft Windows 11 Enterprise|C:\WINDOWS|\Device\Harddisk0\Partition3" machine-name="MYLAPTOP" nunit-version="2.5.8.0" user-domain="REDMOND" cwd="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test" clr-version="Unknown" os-version="10.0.22621" user="danted" />
+  <culture-info current-culture="en-US" current-uiculture="en-US" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Ignored" success="True" time="109.3048" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\Get-AzSubscriptionDeploymentStackCustom.Tests.ps1" executed="True" result="Success" success="True" time="108.7205" asserts="0" description="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\Get-AzSubscriptionDeploymentStackCustom.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Get-AzSubscriptionDeploymentStackCustom" executed="True" result="Success" success="True" time="108.4109" asserts="0" description="Get-AzSubscriptionDeploymentStackCustom">
+            <results>
+              <test-case description="ListDeploymentStacks" name="Get-AzSubscriptionDeploymentStackCustom.ListDeploymentStacks" time="1.0131" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="GetByNameParameterSetname" name="Get-AzSubscriptionDeploymentStackCustom.GetByNameParameterSetname" time="0.351" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="GetByResourceIdParameterSetName" name="Get-AzSubscriptionDeploymentStackCustom.GetByResourceIdParameterSetName" time="0.3871" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\New-AzSubscriptionDeploymentStackCustom.Tests.ps1" executed="True" result="Ignored" success="True" time="0.3088" asserts="0" description="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\New-AzSubscriptionDeploymentStackCustom.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="New-AzSubscriptionDeploymentStackCustom" executed="True" result="Ignored" success="True" time="0.0982" asserts="0" description="New-AzSubscriptionDeploymentStackCustom">
+            <results>
+              <test-case description="ByTemplateFileWithNoParameters" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateFileWithNoParameters" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateFileWithParameterFile" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateFileWithParameterFile" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateFileWithParameterUri" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateFileWithParameterUri" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateFileWithParameterObject" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateFileWithParameterObject" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateSpecWithParameterObject" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateSpecWithParameterObject" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateUriWithParameterObject" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateUriWithParameterObject" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateSpecWithParameterUri" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateSpecWithParameterUri" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateUriWithParameterUri" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateUriWithParameterUri" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateUriWithParameterFile" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateUriWithParameterFile" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateUriWithNoParameters" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateUriWithNoParameters" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateSpecWithNoParameters" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateSpecWithNoParameters" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="ByTemplateSpecWithParameterFile" name="New-AzSubscriptionDeploymentStackCustom.ByTemplateSpecWithParameterFile" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\Save-AzSubscriptionDeploymentStackCustom.Tests.ps1" executed="True" result="Ignored" success="True" time="0.2756" asserts="0" description="C:\Users\danted\repos\dante-azure-powershell\src\Resources\Stacks.Autorest\test\Save-AzSubscriptionDeploymentStackCustom.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Save-AzSubscriptionDeploymentStackCustom" executed="True" result="Ignored" success="True" time="0.1065" asserts="0" description="Save-AzSubscriptionDeploymentStackCustom">
+            <results>
+              <test-case description="SaveByName" name="Save-AzSubscriptionDeploymentStackCustom.SaveByName" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="SaveByResourceId" name="Save-AzSubscriptionDeploymentStackCustom.SaveByResourceId" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+              <test-case description="SaveByStackObject" name="Save-AzSubscriptionDeploymentStackCustom.SaveByStackObject" time="0" asserts="0" success="True" result="Ignored" executed="False" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

@@ -15,7 +15,51 @@ if(($null -eq $TestName) -or ($TestName -contains 'New-AzSubscriptionDeploymentS
 }
 
 Describe 'New-AzSubscriptionDeploymentStackCustom' {
-    It 'CreateExpanded' -skip {
+    It 'ByTemplateFileWithNoParameters' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateFileWithParameterFile' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateFileWithParameterUri' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateFileWithParameterObject' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateSpecWithParameterObject' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateUriWithParameterObject' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateSpecWithParameterUri' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateUriWithParameterUri' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateUriWithParameterFile' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateUriWithNoParameters' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateSpecWithNoParameters' -skip {
+        { throw [System.NotImplementedException] } | Should -Not -Throw
+    }
+
+    It 'ByTemplateSpecWithParameterFile' -skip {
         { throw [System.NotImplementedException] } | Should -Not -Throw
     }
 }

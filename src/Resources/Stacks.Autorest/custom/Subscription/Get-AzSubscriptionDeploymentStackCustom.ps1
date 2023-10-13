@@ -18,13 +18,13 @@ function Get-AzSubscriptionDeploymentStackCustom {
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Retrieves a subscription scoped deployment stack')]
     param(
         [Alias("StackName")]
-        [Parameter(Position = 0, Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByNameParameterSetname", HelpMessage = "The name of the DeploymentStack to get")]
+        [Parameter(Position = 0, Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByNameParameterSetname", HelpMessage = "The name of the DeploymentStack to get.")]
         [ValidateNotNullOrEmpty()]
         [string]
         $Name,
 
         [Alias("Id")]
-        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByResourceIdParameterSetName", HelpMessage = "ResourceId of the DeploymentStack to get")]
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByResourceIdParameterSetName", HelpMessage = "ResourceId of the DeploymentStack to get.")]
         [ValidateNotNullOrEmpty()]
         [string]
         $ResourceId,
@@ -71,8 +71,9 @@ function Get-AzSubscriptionDeploymentStackCustom {
 
     process {
         if ($PSBoundParameters.ContainsKey("ResourceId")) { 
-            # TODO: Implement Resource Name extraction from Resource Id
-            throw "Error: Retrieving by Resource Id not currently supported."
+            $rname = GetNameFromResourceId $PSBoundParameters["ResourceId"]
+            $null = $PSBoundParameters.Remove("ResourceId")
+            $PSBoundParameters["Name"] = $rname
         }
 
         Az.DeploymentStacks.internal\Get-AzDeploymentStacksDeploymentStack @PSBoundParameters

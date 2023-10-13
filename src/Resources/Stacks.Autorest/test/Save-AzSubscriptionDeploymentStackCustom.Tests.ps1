@@ -1,11 +1,11 @@
-if(($null -eq $TestName) -or ($TestName -contains 'Remove-AzDeploymentStacksDeploymentStack'))
+if(($null -eq $TestName) -or ($TestName -contains 'Save-AzSubscriptionDeploymentStackCustom'))
 {
   $loadEnvPath = Join-Path $PSScriptRoot 'loadEnv.ps1'
   if (-Not (Test-Path -Path $loadEnvPath)) {
       $loadEnvPath = Join-Path $PSScriptRoot '..\loadEnv.ps1'
   }
   . ($loadEnvPath)
-  $TestRecordingFile = Join-Path $PSScriptRoot 'Remove-AzDeploymentStacksDeploymentStack.Recording.json'
+  $TestRecordingFile = Join-Path $PSScriptRoot 'Save-AzSubscriptionDeploymentStackCustom.Recording.json'
   $currentPath = $PSScriptRoot
   while(-not $mockingPath) {
       $mockingPath = Get-ChildItem -Path $currentPath -Recurse -Include 'HttpPipelineMocking.ps1' -File
@@ -14,28 +14,16 @@ if(($null -eq $TestName) -or ($TestName -contains 'Remove-AzDeploymentStacksDepl
   . ($mockingPath | Select-Object -First 1).FullName
 }
 
-Describe 'Remove-AzDeploymentStacksDeploymentStack' {
-    It 'Delete1' -skip {
+Describe 'Save-AzSubscriptionDeploymentStackCustom' {
+    It 'SaveByName' -skip {
         { throw [System.NotImplementedException] } | Should -Not -Throw
     }
 
-    It 'Delete2' -skip {
+    It 'SaveByResourceId' -skip {
         { throw [System.NotImplementedException] } | Should -Not -Throw
     }
 
-    It 'Delete' -skip {
-        { throw [System.NotImplementedException] } | Should -Not -Throw
-    }
-
-    It 'DeleteViaIdentity2' -skip {
-        { throw [System.NotImplementedException] } | Should -Not -Throw
-    }
-
-    It 'DeleteViaIdentity1' -skip {
-        { throw [System.NotImplementedException] } | Should -Not -Throw
-    }
-
-    It 'DeleteViaIdentity' -skip {
+    It 'SaveByStackObject' -skip {
         { throw [System.NotImplementedException] } | Should -Not -Throw
     }
 }

@@ -82,8 +82,8 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
-        # Question: There is an enum type that gets generated, but I don't 
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.PSDenySettingsMode] 
+        [ValidateSet('None', 'DenyDelete', 'DenyWriteAndDelete')] 
+        [string]
         ${DenySettingsMode},
 
         [Parameter(HelpMessage = "List of AAD principal IDs excluded from the lock. Up to 5 principals are permitted.")]
