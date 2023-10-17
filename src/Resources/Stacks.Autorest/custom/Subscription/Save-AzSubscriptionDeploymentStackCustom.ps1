@@ -21,18 +21,20 @@ function Save-AzSubscriptionDeploymentStackCustom {
         [Parameter(Position = 0, Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "SaveByName", HelpMessage = "The name of the DeploymentStack to get template/template link for.")]
         [ValidateNotNullOrEmpty()]
         [string]
-        $DeploymentStackName,
+        ${DeploymentStackName},
 
         [Alias("Id")]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "SaveByResourceId", HelpMessage = "ResourceId of the DeploymentStack to get template/template link for.")]
         [ValidateNotNullOrEmpty()]
         [string]
-        $ResourceId,
+        ${ResourceId},
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "SaveByStackObject", HelpMessage = "The stack PS object to get template/template link for.")]
         [ValidateNotNullOrEmpty()]
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack]
-        $InputObject,
+        ${InputObject},
+
+        # ---------- Internal parameters ----------
 
         [Parameter(DontShow)]
         [ValidateNotNull()]
@@ -76,8 +78,8 @@ function Save-AzSubscriptionDeploymentStackCustom {
 
     process {
         if ($PSBoundParameters.ContainsKey("ResourceId")) { 
-            # TODO: Implement Resource Name extraction from Resource Id
-            throw "Error: Retrieving by Resource Id not currently supported."
+            $PSBoundParameters["DeploymentStackName"] = GetNameFromResourceId $PSBoundParameters["ResourceId"]
+            $null = $PSBoundParameters.Remove("ResourceId")
         }
 
         if ($PSBoundParameters.ContainsKey("StackObject")) {

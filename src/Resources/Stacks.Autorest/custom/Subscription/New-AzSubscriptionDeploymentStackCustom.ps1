@@ -269,12 +269,10 @@ function New-AzSubscriptionDeploymentStackCustom {
             }
             # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
             
-            # TODO: Figure out typing here. 
-            
-            # if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
-                # TODO: figure out type differences.
-                # $PSBoundParameters["Tag"] = $currentStack.Tag
-            # }
+            # Question: May be better to change types rather than the conversion? 
+            if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
+                $PSBoundParameters["Tag"] = ConvertTagsObjectToHashtable $currentStack.Tags
+            }
 
             # -------------------------------------------------- Upsert Stack --------------------------------------------------
             # TODO: Work on to how to say this so it works better with ShouldProcess prompt.

@@ -21,13 +21,15 @@ function Get-AzSubscriptionDeploymentStackCustom {
         [Parameter(Position = 0, Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByNameParameterSetname", HelpMessage = "The name of the DeploymentStack to get.")]
         [ValidateNotNullOrEmpty()]
         [string]
-        $Name,
+        ${Name},
 
         [Alias("Id")]
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "GetByResourceIdParameterSetName", HelpMessage = "ResourceId of the DeploymentStack to get.")]
         [ValidateNotNullOrEmpty()]
         [string]
-        $ResourceId,
+        ${ResourceId},
+
+        # ---------- Internal parameters ----------
 
         [Parameter(DontShow)]
         [ValidateNotNull()]
@@ -71,9 +73,8 @@ function Get-AzSubscriptionDeploymentStackCustom {
 
     process {
         if ($PSBoundParameters.ContainsKey("ResourceId")) { 
-            $rname = GetNameFromResourceId $PSBoundParameters["ResourceId"]
+            $PSBoundParameters["Name"] = GetNameFromResourceId $PSBoundParameters["ResourceId"]
             $null = $PSBoundParameters.Remove("ResourceId")
-            $PSBoundParameters["Name"] = $rname
         }
 
         Az.DeploymentStacks.internal\Get-AzDeploymentStacksDeploymentStack @PSBoundParameters
