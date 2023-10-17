@@ -82,7 +82,8 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
-        [Microsoft.Azure.PowerShell.Cmdlets.Databricks.PSArgumentCompleterAttribute('None', 'DenyDelete', 'DenyWriteAndDelete')]
+        [ValidateSet('None', 'DenyDelete', 'DenyWriteAndDelete')]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.PSArgumentCompleterAttribute('None', 'DenyDelete', 'DenyWriteAndDelete')]
         ${DenySettingsMode},
 
         [Parameter(HelpMessage = "List of AAD principal IDs excluded from the lock. Up to 5 principals are permitted.")]
@@ -108,6 +109,7 @@ function New-AzSubscriptionDeploymentStackCustom {
 
         [Parameter(HelpMessage = "The ResourceGroup at which the deployment will be created. If none is specified, it will default to the " +
         "subscription level scope of the deployment stack.")]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.PSResourceGroupCompleterAttribute]
         [string]
         ${DeploymentResourceGroupName},
 
