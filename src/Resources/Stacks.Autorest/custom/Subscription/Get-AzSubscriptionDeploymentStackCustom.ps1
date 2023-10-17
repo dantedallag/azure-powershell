@@ -13,7 +13,7 @@
 # ----------------------------------------------------------------------------------
 
 function Get-AzSubscriptionDeploymentStackCustom {
-    [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack])]
+    [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack])]
     [CmdletBinding(DefaultParameterSetName='ListDeploymentStacks', PositionalBinding)]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Retrieves a subscription scoped deployment stack')]
     param(

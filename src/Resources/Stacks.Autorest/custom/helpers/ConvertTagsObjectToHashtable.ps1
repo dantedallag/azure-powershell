@@ -20,7 +20,7 @@ function ConvertTagsObjectToHashtable {
     param(
         [Parameter(Position = 0, Mandatory)]
         [ValidateNotNullOrEmpty()]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStackTags]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStackTags]
         $Tag
     )
 

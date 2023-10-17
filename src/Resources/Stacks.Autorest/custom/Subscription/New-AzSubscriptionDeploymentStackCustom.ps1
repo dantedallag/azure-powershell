@@ -13,7 +13,7 @@
 # ----------------------------------------------------------------------------------
 
 function New-AzSubscriptionDeploymentStackCustom {
-    [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack])]
+    [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack])]
     [CmdletBinding(DefaultParameterSetName='ByTemplateFileWithNoParameters', PositionalBinding=$false, SupportsShouldProcess, ConfirmImpact='High')]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Creates a new subscription scoped deployment stack')]
     param(
@@ -82,8 +82,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
-        [ValidateSet('None', 'DenyDelete', 'DenyWriteAndDelete')] 
-        [string]
+        [Microsoft.Azure.PowerShell.Cmdlets.Databricks.PSArgumentCompleterAttribute('None', 'DenyDelete', 'DenyWriteAndDelete')]
         ${DenySettingsMode},
 
         [Parameter(HelpMessage = "List of AAD principal IDs excluded from the lock. Up to 5 principals are permitted.")]
