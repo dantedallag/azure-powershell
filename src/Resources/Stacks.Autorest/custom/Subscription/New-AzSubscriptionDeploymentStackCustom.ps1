@@ -109,7 +109,6 @@ function New-AzSubscriptionDeploymentStackCustom {
 
         [Parameter(HelpMessage = "The ResourceGroup at which the deployment will be created. If none is specified, it will default to the " +
         "subscription level scope of the deployment stack.")]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.PSResourceGroupCompleterAttribute]
         [string]
         ${DeploymentResourceGroupName},
 
