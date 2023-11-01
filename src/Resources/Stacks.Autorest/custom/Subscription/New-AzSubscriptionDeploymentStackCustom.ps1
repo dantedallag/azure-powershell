@@ -14,7 +14,7 @@
 
 function New-AzSubscriptionDeploymentStackCustom {
     [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack])]
-    [CmdletBinding(DefaultParameterSetName='ByTemplateFileWithNoParameters', PositionalBinding=$false, SupportsShouldProcess, ConfirmImpact='High')]
+    [CmdletBinding(DefaultParameterSetName = 'ByTemplateFileWithNoParameters', PositionalBinding = $false, SupportsShouldProcess, ConfirmImpact='High')]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Creates a new subscription scoped deployment stack')]
     param(
         [Parameter(Mandatory, ParameterSetName = 'ByTemplateFileWithNoParameters', HelpMessage = 'TemplateFile to be used to create the stack.')]
@@ -82,7 +82,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
-        [ValidateSet('None', 'DenyDelete', 'DenyWriteAndDelete')]
+        #NOTE: This is only completing and is not validating (we currently do both). We were advised to only use completers.
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.PSArgumentCompleterAttribute('None', 'DenyDelete', 'DenyWriteAndDelete')]
         ${DenySettingsMode},
 
@@ -110,6 +110,8 @@ function New-AzSubscriptionDeploymentStackCustom {
         [Parameter(HelpMessage = "The ResourceGroup at which the deployment will be created. If none is specified, it will default to the " +
         "subscription level scope of the deployment stack.")]
         [string]
+        
+        # TODO: Will need to create custom completer that will fetch resource groups in current subscription.
         ${DeploymentResourceGroupName},
 
         [Parameter(HelpMessage = "Do not ask for confirmation when overwriting an existing stack.")]
@@ -159,132 +161,141 @@ function New-AzSubscriptionDeploymentStackCustom {
     )
 
     process {
-        # TODO: Currently does not handle Bicep files.
-        try{
-            # -------------------------------------------------- Resolve Template Data -------------------------------------------------- 
-            if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
-                $template = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateFile"]
-                $PSBoundParameters.Add("Template", $template)
-                $null = $PSBoundParameters.Remove('TemplateFile')
+        # -------------------------------------------------- Resolve Template Data --------------------------------------------------
+        
+        # TODO: Will have to support bicep. 
+        # TODO: Template/parameter reading in will probably have to be smarter...I want to talk through some of these libraries that PS
+        # team has been maintaining.
 
-            } elseif ($PSBoundParameters.ContainsKey("TemplateUri")) {
-                $templateUri = $PSBoundParameters["TemplateUri"]
-                if ($PSBoundParameters.ContainsKey("QueryString"))
-                {
-                    $queryString = $PSBoundParameters["QueryString"]
-                    if ($queryString.Substring(0, 1) -eq "?") {
-                        $templateUri = $templateUri + $queryString
-                    } else {
-                        $templateUri = $templateUri + "?" + $queryString
-                    }
-                    $null = $PSBoundParameters.Remove("QueryString")
+        if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
+            $template = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateFile"]
+            $PSBoundParameters.Add("Template", $template)
+            $null = $PSBoundParameters.Remove('TemplateFile')
+
+        } elseif ($PSBoundParameters.ContainsKey("TemplateUri")) {
+            $templateUri = $PSBoundParameters["TemplateUri"]
+            if ($PSBoundParameters.ContainsKey("QueryString"))
+            {
+                $queryString = $PSBoundParameters["QueryString"]
+                if ($queryString.Substring(0, 1) -eq "?") {
+                    $templateUri = $templateUri + $queryString
+                } else {
+                    $templateUri = $templateUri + "?" + $queryString
                 }
-                $PSBoundParameters["TemplateLinkUri"] = $templateUri
-                $null = $PSBoundParameters.Remove("TemplateUri")
+                $null = $PSBoundParameters.Remove("QueryString")
+            }
+            $PSBoundParameters["TemplateLinkUri"] = $templateUri
+            $null = $PSBoundParameters.Remove("TemplateUri")
 
-            } elseif ($PSBoundParameters.ContainsKey("TemplateSpecId")) {
-                $PSBoundParameters["TemplateLinkId"] = $PSBoundParameters["TemplateSpecId"]
-                $null = $PSBoundParameters.Remove("TemplateSpecId")
+        } elseif ($PSBoundParameters.ContainsKey("TemplateSpecId")) {
+            $PSBoundParameters["TemplateLinkId"] = $PSBoundParameters["TemplateSpecId"]
+            $null = $PSBoundParameters.Remove("TemplateSpecId")
 
-            } else {
-                throw "Error: A TemplateFile, TemplateUri, or TemplateSpecId must be provided."
-            }
-            
-            # -------------------------------------------------- Resolve Template Parameter Data --------------------------------------------------
-            if ($PSBoundParameters.ContainsKey("TemplateParameterFile")) {  
-                $parameters = ExtractJsonFromTemplateParameterFile $PSBoundParameters["TemplateParameterFile"]
-                $PSBoundParameters["Parameter"] = $parameters
-                $null = $PSBoundParameters.Remove("TemplateParameterFile")
-
-            } elseif ($PSBoundParameters.ContainsKey("TemplateParameterObject")) {
-                $PSBoundParameters["Parameter"] = $PSBoundParameters["TemplateParameterObject"]
-                $null = $PSBoundParameters.Remove("TemplateParameterObject")
-
-            } elseif ($PSBoundParameters.ContainsKey("TemplateParameterUri")) {
-                $PSBoundParameters["ParameterLinkUri"] = $PSBoundParameters["TemplateParameterUri"]
-                $null = $PSBoundParameters.Remove("TemplateParameterUri")
-            }
-            
-            # -------------------------------------------------- Populate ActionOnUnmange Fields --------------------------------------------------
-            $resourcesCleanupAction = "detach"
-            $resourceGroupsCleanupAction = "detach"
-
-            $shouldDeleteResources = $PSBoundParameters.ContainsKey('DeleteResources') -or $PSBoundParameters.ContainsKey('DeleteAll')
-            $shouldDeleteResourceGroups = $PSBoundParameters.ContainsKey('DeleteResourceGroups') -or $PSBoundParameters.ContainsKey('DeleteAll')
-
-            $null = $PSBoundParameters.Remove('DeleteResources')
-            $null = $PSBoundParameters.Remove('DeleteResourceGroups')
-            $null = $PSBoundParameters.Remove('DeleteAll')
-            
-            if ($shouldDeleteResources) {
-                $resourcesCleanupAction = "delete"
-            }
-
-            if ($shouldDeleteResourceGroups) {
-                $resourceGroupsCleanupAction = "delete"
-            }
-
-            $PSBoundParameters["ActionOnUnmanageResource"] = $resourcesCleanupAction
-            $PSBoundParameters["ActionOnUnmanageResourceGroup"] = $resourceGroupsCleanupAction
-            # Always detach MG, as delete functionality is not implemented.
-            $PSBoundParameters["ActionOnUnmanageManagementGroup"] = "detach"
-
-            # -------------------------------------------------- Populate Deployment Scope --------------------------------------------------
-            if ($PSBoundParameters.ContainsKey("DeploymentResourceGroupName")) {
-                $currentSub = (Get-AzContext).Subscription.Id
-                $PSBoundParameters["DeploymentScope"] = "/subscription/" + $currentSub + "/resourceGroups/" + $PSBoundParameters["DeploymentResourceGroupName"]
-                $null = $PSBoundParameters.Remove("DeploymentResourceGroupName")
-            }
-
-            # -------------------------------------------------- Retrieve Existing Stack --------------------------------------------------
-            # Question: What is the best way to propagate required parameters as well as -Debug (when needed) to cmdlets we are calling?      
-            $getParameters = @{}
-            $getParameters['Name'] = $PSBoundParameters['Name']
-            if ($PSBoundParameters.ContainsKey("HttpPipelineAppend")) {
-                $getParameters['HttpPipelineAppend'] = $PSBoundParameters['HttpPipelineAppend']
-            }
-            if ($PSBoundParameters.ContainsKey("HttpPipelinePrepend")) {
-                $getParameters['HttpPipelinePrepend'] = $PSBoundParameters['HttpPipelinePrepend']            
-            }
-            if ($PSBoundParameters.ContainsKey("NoWait")) {
-                $getParameters['NoWait'] = $PSBoundParameters['NoWait']
-            }
-            if ($PSBoundParameters.ContainsKey("Proxy")) {
-                $getParameters['Proxy'] = $PSBoundParameters['Proxy']
-            }
-            if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
-                $getParameters['ProxyCredential'] = $PSBoundParameters['ProxyCredential']
-            }
-            if ($PSBoundParameters.ContainsKey("ProxyUseDefaultCredential")) {
-                $getParameters['ProxyUseDefaultCredentials'] = $PSBoundParameters['ProxyyUseDefaultCredentials']
-            }
-            
-            try {   
-                $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
-            } catch {
-                # Question: Is there a better way to catch this?
-                if ($_.Exception.Code -ne "ResourceNotFound") {
-                    throw 
-                }    
-            }
-            # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
-            
-            # Question: May be better to change types rather than the conversion? 
-            if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
-                $PSBoundParameters["Tag"] = ConvertTagsObjectToHashtable $currentStack.Tags
-            }
-
-            # -------------------------------------------------- Upsert Stack --------------------------------------------------
-            # TODO: Work on to how to say this so it works better with ShouldProcess prompt.
-            $warningMessage = "Overwrite Subscription scoped DeploymentStack in current Subscription with the following actions:" 
-            $warning = StackExistsWarning $warningMessage $shouldDeleteResources $shouldDeleteResourceGroups
-            
-            if (($null -eq $currentStack) -or $PSBoundParameters.ContainsKey('Force') -or ($PsCmdlet.ShouldProcess($PSBoundParameters["Name"], $warning))) {
-                Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
-            }
+        } else {
+            throw "Error: A TemplateFile, TemplateUri, or TemplateSpecId must be provided."
         }
-        catch {
-            throw
+        
+        # -------------------------------------------------- Resolve Template Parameter Data --------------------------------------------------
+
+        # TODO: This C# needs to be emulated better.
+        # Dictionary<string, object> parametersDictionary = parameters?.ToDictionary(false);
+        # string parametersContent = parametersDictionary != null
+        #     ? PSJsonSerializer.Serialize(parametersDictionary)
+        #     : null;
+        # deploymentStackModel.Parameters = !string.IsNullOrEmpty(parametersContent)
+        #     ? JObject.Parse(parametersContent)
+        #     : null;
+
+        if ($PSBoundParameters.ContainsKey("TemplateParameterFile")) {  
+            $parameters = ExtractJsonFromTemplateParameterFile $PSBoundParameters["TemplateParameterFile"]
+            $PSBoundParameters["Parameter"] = $parameters
+            $null = $PSBoundParameters.Remove("TemplateParameterFile")
+
+        } elseif ($PSBoundParameters.ContainsKey("TemplateParameterObject")) {
+            $PSBoundParameters["Parameter"] = $PSBoundParameters["TemplateParameterObject"]
+            $null = $PSBoundParameters.Remove("TemplateParameterObject")
+
+        } elseif ($PSBoundParameters.ContainsKey("TemplateParameterUri")) {
+            $PSBoundParameters["ParameterLinkUri"] = $PSBoundParameters["TemplateParameterUri"]
+            $null = $PSBoundParameters.Remove("TemplateParameterUri")
+        }
+        
+        # -------------------------------------------------- Populate ActionOnUnmange Fields --------------------------------------------------
+        $resourcesCleanupAction = "detach"
+        $resourceGroupsCleanupAction = "detach"
+
+        $shouldDeleteResources = $PSBoundParameters.ContainsKey('DeleteResources') -or $PSBoundParameters.ContainsKey('DeleteAll')
+        $shouldDeleteResourceGroups = $PSBoundParameters.ContainsKey('DeleteResourceGroups') -or $PSBoundParameters.ContainsKey('DeleteAll')
+
+        $null = $PSBoundParameters.Remove('DeleteResources')
+        $null = $PSBoundParameters.Remove('DeleteResourceGroups')
+        $null = $PSBoundParameters.Remove('DeleteAll')
+        
+        if ($shouldDeleteResources) {
+            $resourcesCleanupAction = "delete"
+        }
+
+        if ($shouldDeleteResourceGroups) {
+            $resourceGroupsCleanupAction = "delete"
+        }
+
+        $PSBoundParameters["ActionOnUnmanageResource"] = $resourcesCleanupAction
+        $PSBoundParameters["ActionOnUnmanageResourceGroup"] = $resourceGroupsCleanupAction
+        # Always detach MG, as delete functionality is not implemented.
+        $PSBoundParameters["ActionOnUnmanageManagementGroup"] = "detach"
+
+        # -------------------------------------------------- Populate Deployment Scope --------------------------------------------------
+        if ($PSBoundParameters.ContainsKey("DeploymentResourceGroupName")) {
+            $currentSub = (Get-AzContext).Subscription.Id
+            $PSBoundParameters["DeploymentScope"] = "/subscription/" + $currentSub + "/resourceGroups/" + $PSBoundParameters["DeploymentResourceGroupName"]
+            $null = $PSBoundParameters.Remove("DeploymentResourceGroupName")
+        }
+
+        # -------------------------------------------------- Retrieve Existing Stack --------------------------------------------------
+        # Question: What is the best way to propagate required parameters as well as -Debug (when needed) to cmdlets we are calling?      
+        $getParameters = @{}
+        $getParameters['Name'] = $PSBoundParameters['Name']
+        if ($PSBoundParameters.ContainsKey("HttpPipelineAppend")) {
+            $getParameters['HttpPipelineAppend'] = $PSBoundParameters['HttpPipelineAppend']
+        }
+        if ($PSBoundParameters.ContainsKey("HttpPipelinePrepend")) {
+            $getParameters['HttpPipelinePrepend'] = $PSBoundParameters['HttpPipelinePrepend']            
+        }
+        if ($PSBoundParameters.ContainsKey("NoWait")) {
+            $getParameters['NoWait'] = $PSBoundParameters['NoWait']
+        }
+        if ($PSBoundParameters.ContainsKey("Proxy")) {
+            $getParameters['Proxy'] = $PSBoundParameters['Proxy']
+        }
+        if ($PSBoundParameters.ContainsKey("ProxyCredential")) {
+            $getParameters['ProxyCredential'] = $PSBoundParameters['ProxyCredential']
+        }
+        if ($PSBoundParameters.ContainsKey("ProxyUseDefaultCredential")) {
+            $getParameters['ProxyUseDefaultCredentials'] = $PSBoundParameters['ProxyyUseDefaultCredentials']
+        }
+        
+        try {   
+            $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
+        } catch {
+            # Question: Is there a better way to catch this?
+            if ($_.Exception.Code -ne "ResourceNotFound") {
+                throw 
+            }    
+        }
+        # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
+        if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
+            $PSBoundParameters["Tag"] = ConvertTagsObjectToHashtable $currentStack.Tags
+        }
+
+        # -------------------------------------------------- Upsert Stack --------------------------------------------------
+        # TODO: Work on to how to say this so it works better with ShouldProcess prompt.
+        $warningMessage = "Overwrite Subscription scoped DeploymentStack in current Subscription with the following actions:" 
+        $warning = StackExistsWarning $warningMessage $shouldDeleteResources $shouldDeleteResourceGroups
+        
+        if (($null -eq $currentStack) -or $PSBoundParameters.ContainsKey('Force') -or ($PsCmdlet.ShouldProcess($PSBoundParameters["Name"], $warning))) {
+            Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
         }
     }
+
+    # TODO: Assure exceptions/errors are being handled correctly.
 }

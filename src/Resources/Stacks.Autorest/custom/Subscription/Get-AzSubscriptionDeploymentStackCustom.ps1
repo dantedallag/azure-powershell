@@ -14,7 +14,7 @@
 
 function Get-AzSubscriptionDeploymentStackCustom {
     [OutputType([Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack])]
-    [CmdletBinding(DefaultParameterSetName='ListDeploymentStacks', PositionalBinding)]
+    [CmdletBinding(DefaultParameterSetName = 'ListDeploymentStacks', PositionalBinding = $true)]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description('Retrieves a subscription scoped deployment stack')]
     param(
         [Alias("StackName")]
@@ -73,10 +73,18 @@ function Get-AzSubscriptionDeploymentStackCustom {
 
     process {
         if ($PSBoundParameters.ContainsKey("ResourceId")) { 
-            $PSBoundParameters["Name"] = GetNameFromResourceId $PSBoundParameters["ResourceId"]
+            $extractedName = [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Components.ResourceIdUtility]::GetResourceName($PSBoundParameters["ResourceId"])
+            if ([string]::IsNullOrWhiteSpace($extractedName))
+            {
+                throw "Provided Id '" + $PSBoundParameters["ResourceId"] + "' is not in correct form. Should be in form " +
+                "/subscriptions/<subid>/providers/Microsoft.Resources/deploymentStacks/<stackname>"
+            }
+            
+            $PSBoundParameters["Name"] = $extractedName
             $null = $PSBoundParameters.Remove("ResourceId")
         }
 
+        $name
         Az.DeploymentStacks.internal\Get-AzDeploymentStacksDeploymentStack @PSBoundParameters
     }
 }

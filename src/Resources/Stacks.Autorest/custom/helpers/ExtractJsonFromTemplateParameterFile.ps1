@@ -12,6 +12,8 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------------
 
+# TODO: This is simple and will probably need to be replaced.
+
 function ExtractJsonFromTemplateParameterFile {
     [OutputType([hashtable])]
     [CmdletBinding(PositionalBinding)]
