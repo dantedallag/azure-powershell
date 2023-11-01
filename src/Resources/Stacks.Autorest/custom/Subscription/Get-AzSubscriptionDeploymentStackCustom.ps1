@@ -84,7 +84,8 @@ function Get-AzSubscriptionDeploymentStackCustom {
             $null = $PSBoundParameters.Remove("ResourceId")
         }
 
-        $name
+        # NOTE: Does this return a generic PS object? I'm confused as on the command line, thats what it seems like. This makes it hard
+        # for users to interactively auto complete retrieving values.
         Az.DeploymentStacks.internal\Get-AzDeploymentStacksDeploymentStack @PSBoundParameters
     }
 }

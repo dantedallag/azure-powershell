@@ -24,12 +24,12 @@ function Remove-AzSubscriptionDeploymentStackCustom {
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "RemoveByResourceId", HelpMessage = "ResourceId of the stack to delete.")]
         [ValidateNotNullOrEmpty()]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack]
+        [string]
         ${ResourceId},
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "RemoveByStackObject", HelpMessage = "The stack PS object.")]
         [ValidateNotNullOrEmpty()]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack]
         ${InputObject},
 
         [Parameter(HelpMessage = 'Signal to delete unmanaged stack resources after upating stack.')]

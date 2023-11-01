@@ -31,7 +31,7 @@ function Save-AzSubscriptionDeploymentStackCustom {
 
         [Parameter(Mandatory, ValueFromPipelineByPropertyName, ParameterSetName = "SaveByStackObject", HelpMessage = "The stack PS object to get template/template link for.")]
         [ValidateNotNullOrEmpty()]
-        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.Api20220801Preview.DeploymentStack]
+        [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Models.DeploymentStack]
         ${InputObject},
 
         # ---------- Internal parameters ----------
