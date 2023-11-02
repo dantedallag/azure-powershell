@@ -29,11 +29,15 @@ For information on how to develop for `Az.DeploymentStacks`, see [how-to.md](how
 ### AutoRest Configuration
 > see https://aka.ms/autorest
 
+### AutoRest Configuration
+> see https://aka.ms/autorest
+
 ``` yaml
 require:
   - $(this-folder)/../../readme.azure.noprofile.md
+# NOTE: Temporary use of local file for api spec to fix error issue.
 input-file:
-  - https://github.com/Azure/azure-rest-api-specs/blob/c3a00cf753f01728e49bdb232054b0964075ec45/specification/resources/resource-manager/Microsoft.Resources/preview/2022-08-01-preview/deploymentStacks.json
+  - C:/Users/danted/dante-az-specs/specification/resources/resource-manager/Microsoft.Resources/preview/2022-08-01-preview/deploymentStacks.json
 
 root-module-name: $(prefix).Resources
 title: DeploymentStacks
@@ -41,6 +45,10 @@ namespace: Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks
 identity-correction-for-post: true
 resourcegroup-append: true
 default-exclude-tableview-properties: false
+
+metadata:
+  formatsToProcess:
+  - ./custom/Az.DeploymentStacks.format.ps1xml
 
 directive:
   # Hide default generated cmdlets:
@@ -123,7 +131,7 @@ directive:
       model-name: DeploymentStack
       property-name: ActionOnUnmanageResource
     set:
-      property-name: ResourcesCleaunupAction
+      property-name: ResourcesCleanupAction
   - where:
       model-name: DeploymentStack
       property-name: ActionOnUnmanageManagementGroup

@@ -277,13 +277,16 @@ function New-AzSubscriptionDeploymentStackCustom {
         try {   
             $currentStack = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
         } catch {
-            # Question: Is there a better way to catch this?
-            if ($_.Exception.Code -ne "ResourceNotFound") {
+            # Question: Is there a better way to catch this? It seems like the exceptions coming back from the generated cmdlets are generic and 
+            # so the only way I can see to handle this is string matching the message, which isn't great.
+            if ($_.Exception.Message -notmatch "[ResourceNotFound]") {
                 throw 
             }    
         }
         # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
-        if (($null -ne $currentStack) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
+        # TODO: Is there a way to prevent Tags to be saved as an empty object? For lists it seems like we are saving empty lists and $null, but we are defaulting to an empty object for Tags.
+        # Tags are special because we don't want to reset the Tags when we pass an empty object.
+        if (($null -ne $currentStack) -and ($null -ne $currentStack.Tags) -and ($currentStack.Tags.Keys.Count -ne 0) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
             $PSBoundParameters["Tag"] = ConvertTagsObjectToHashtable $currentStack.Tags
         }
 
@@ -293,7 +296,13 @@ function New-AzSubscriptionDeploymentStackCustom {
         $warning = StackExistsWarning $warningMessage $shouldDeleteResources $shouldDeleteResourceGroups
         
         if (($null -eq $currentStack) -or $PSBoundParameters.ContainsKey('Force') -or ($PsCmdlet.ShouldProcess($PSBoundParameters["Name"], $warning))) {
-            Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
+            try {
+                Az.DeploymentStacks.internal\New-AzDeploymentStacksDeploymentStack @PSBoundParameters
+            } catch {
+                # TODO: Write a better exception parser to write error.
+                $_.Exception.Message
+                Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
+            }
         }
     }
 

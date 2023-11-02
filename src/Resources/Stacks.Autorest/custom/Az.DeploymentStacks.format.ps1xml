@@ -10,23 +10,25 @@
                 <ListEntries>
                     <ListEntry>
                         <ListItems>
-                            <!-- <ListItem>
+                            <ListItem>
                                 <Label>Id</Label>
-                                <PropertyName>id</PropertyName>
-                            </ListItem> -->
+                                <PropertyName>Id</PropertyName>
+                            </ListItem>
                             <ListItem>
                                 <Label>Name</Label>
-                                <PropertyName>name</PropertyName>
-                            </ListItem>     
+                                <PropertyName>Name</PropertyName>
+                            </ListItem>
                             <ListItem>
                                 <Label>ProvisioningState</Label>
-                                <PropertyName>provisioningState</PropertyName>
+                                <PropertyName>ProvisioningState</PropertyName>
                             </ListItem>
+                            <ListItem>
                                 <Label>ResourcesCleanupAction</Label>
-                                <PropertyName>resourcesCleanupAction</PropertyName>
+                                <PropertyName>ResourcesCleanupAction</PropertyName>
+                            </ListItem>
                             <ListItem>
                                 <Label>ResourceGroupsCleanupAction</Label>
-                                <PropertyName>resourceGroupsCleanupAction</PropertyName>
+                                <PropertyName>ResourceGroupsCleanupAction</PropertyName>
                             </ListItem>
                             <ListItem>
                                 <Label>DenySettingsMode</Label>
@@ -63,6 +65,7 @@
                                 </ItemSelectionCondition>
                                 <ScriptBlock>$_.deploymentId</ScriptBlock>
                             </ListItem>
+                            <!-- TODO: We need to define ToString() methods for all of these types -->
                             <ListItem>
                                 <Label>Resources</Label>
                                 <ItemSelectionCondition>
@@ -89,12 +92,12 @@
                                 <ItemSelectionCondition>
                                     <ScriptBlock>$_.failedResources -ne $null</ScriptBlock>
                                 </ItemSelectionCondition>
-                                <ScriptBlock>$s = ""; Foreach($item in $_.failedResources) { $n = ""; if ($s -ne "") { $n = ",`n"; } $s = $s + $n + "{`n`tid: " +  $item.id + "`n`terror: " + $item.error.message + "`n}"} $s;</ScriptBlock>
+                                <ScriptBlock>$s = ""; Foreach($item in $_.failedResources) { $n = ""; if ($s -ne "") { $n = ",`n"; } $s = $s + $n + "{`n`tid: " +  $item.id + "`n`terror: " + $item.Message + "`n}"} $s;</ScriptBlock>
                             </ListItem>
                             <ListItem>
                                 <Label>Error</Label>
                                 <ItemSelectionCondition>
-                                    <ScriptBlock>$_.error -ne $null</ScriptBlock>
+                                    <ScriptBlock>$_.ErrorMessage -ne $null</ScriptBlock>
                                 </ItemSelectionCondition>
                                 <ScriptBlock>$_.ErrorMessage</ScriptBlock>
                             </ListItem>

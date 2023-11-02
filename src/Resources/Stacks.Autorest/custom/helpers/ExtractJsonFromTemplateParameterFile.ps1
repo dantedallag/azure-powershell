@@ -13,6 +13,7 @@
 # ----------------------------------------------------------------------------------
 
 # TODO: This is simple and will probably need to be replaced.
+# I think there is actually an issue with how we parse parameters.
 
 function ExtractJsonFromTemplateParameterFile {
     [OutputType([hashtable])]

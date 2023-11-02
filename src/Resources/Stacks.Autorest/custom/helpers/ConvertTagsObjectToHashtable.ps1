@@ -15,7 +15,7 @@
 function ConvertTagsObjectToHashtable {
     [OutputType([hashtable])]
     [CmdletBinding(PositionalBinding)]
-    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
+    # [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description("Converts generated Tags object into hashtable.")]
     param(
         [Parameter(Position = 0, Mandatory)]
@@ -26,9 +26,9 @@ function ConvertTagsObjectToHashtable {
 
     process {   
         $tags = @{} 
-        for ($i = 0; $i -le $Tag.Keys.Count; $i++)
-        {
-            $tags[$Tag.Keys[$i]] = $Tag.Values[$i]
+        foreach ($t in $Tag.Keys.GetEnumerator())
+        { 
+            $tags[$t] = $Tag[$t]
         }
 
         $tags
