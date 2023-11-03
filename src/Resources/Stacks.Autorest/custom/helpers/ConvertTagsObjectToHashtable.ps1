@@ -15,7 +15,7 @@
 function ConvertTagsObjectToHashtable {
     [OutputType([hashtable])]
     [CmdletBinding(PositionalBinding)]
-    # [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
+    [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.DoNotExportAttribute()]
     [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.Description("Converts generated Tags object into hashtable.")]
     param(
         [Parameter(Position = 0, Mandatory)]
