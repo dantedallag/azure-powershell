@@ -72,6 +72,11 @@ directive:
       verb: Set
       subject: DeploymentStack
     hide: true
+    directive:
+  - where:
+      verb: Update
+      subject: DeploymentStack
+    remove: true
 
   # Fix Deny Setting parameter names:
   - where:
