@@ -284,6 +284,7 @@ function New-AzSubscriptionDeploymentStackCustom {
             }    
         }
         # -------------------------------------------------- Populate Tags From Existing Stack --------------------------------------------------
+        
         # TODO: Is there a way to prevent Tags to be saved as an empty object? For lists it seems like we are saving empty lists and $null, but we are defaulting to an empty object for Tags.
         # Tags are special because we don't want to reset the Tags when we pass an empty object.
         if (($null -ne $currentStack) -and ($null -ne $currentStack.Tags) -and ($currentStack.Tags.Keys.Count -ne 0) -and ($false -eq $PSBoundParameters.ContainsKey("Tag"))) {
