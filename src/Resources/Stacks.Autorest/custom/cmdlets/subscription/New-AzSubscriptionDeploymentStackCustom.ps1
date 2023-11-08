@@ -82,7 +82,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         ${DeleteAll},
 
         [Parameter(Mandatory, HelpMessage = 'Mode for DenySettings. Possible values include: "denyDelete", "denyWriteAndDelete", and "none".')]
-        #NOTE: This is only completing and is not validating (we currently do both). We were advised to only use completers.
+        # NOTE: This is only completing and is not validating (we currently do both). We were advised to only use completers.
         [Microsoft.Azure.PowerShell.Cmdlets.Resources.DeploymentStacks.PSArgumentCompleterAttribute('None', 'DenyDelete', 'DenyWriteAndDelete')]
         ${DenySettingsMode},
 
@@ -164,8 +164,7 @@ function New-AzSubscriptionDeploymentStackCustom {
         # -------------------------------------------------- Resolve Template Data --------------------------------------------------
         
         # TODO: Will have to support bicep. 
-        # TODO: Template/parameter reading in will probably have to be smarter...I want to talk through some of these libraries that PS
-        # team has been maintaining.
+        # TODO: Template/parameter reading in will probably have to be smarter than the temp helper cmdlets that I wrote.
 
         if ($PSBoundParameters.ContainsKey("TemplateFile")) {       
             $template = ExtractJsonFromTemplateFile $PSBoundParameters["TemplateFile"]

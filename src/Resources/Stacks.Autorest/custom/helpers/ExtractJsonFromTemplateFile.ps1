@@ -12,7 +12,7 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------------
 
-# TODO: This is simple and will probably need to be replaced.
+# TODO: This is simple and will probably need to be replaced (as does the parameter file parsing).
 
 function ExtractJsonFromTemplateFile {
     [OutputType([hashtable])]

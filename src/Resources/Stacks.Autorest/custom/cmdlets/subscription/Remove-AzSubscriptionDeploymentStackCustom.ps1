@@ -52,7 +52,6 @@ function Remove-AzSubscriptionDeploymentStackCustom {
         [bool]
 
         # TODO: How does PassThru work on generated cmdlets?
-        
         ${PassThru},
 
         # ---------- Internal parameters ----------
@@ -166,8 +165,9 @@ function Remove-AzSubscriptionDeploymentStackCustom {
         try {   
             $null = Az.DeploymentStacks\Get-AzSubscriptionDeploymentStackCustom @getParameters
         } catch {
-            # Question: Is there a better way to catch this?
-            if ($_.Exception.Code -ne "ResourceNotFound") {
+            # Question: Is there a better way to catch this? It seems like the exceptions coming back from the generated cmdlets are generic and 
+            # so the only way I can see to handle this is string matching the message, which isn't great.
+            if ($_.Exception.Message -notmatch "[ResourceNotFound]") {
                 throw 
             }    
         }

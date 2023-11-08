@@ -12,8 +12,8 @@
 # limitations under the License.
 # ----------------------------------------------------------------------------------
 
-# TODO: This is simple and will probably need to be replaced.
-# I think there is actually an issue with how we parse parameters.
+# TODO: This does not work. Our current parameter parsing fucntionality needs to be
+# migrated more carefully.
 
 function ExtractJsonFromTemplateParameterFile {
     [OutputType([hashtable])]

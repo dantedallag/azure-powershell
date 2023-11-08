@@ -1,4 +1,4 @@
-// Note: This code has come from an external library.
+// Note: This code has been stripped from an external library.
 
 using System;
 using System.Collections.Generic;
