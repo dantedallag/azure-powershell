@@ -21,17 +21,14 @@ using Microsoft.Azure.Management.Resources;
 using Microsoft.Azure.Management.Resources.Models;
 using Microsoft.WindowsAzure.Commands.Utilities.Common;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
 
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Management.Automation;
 using System.Net;
-using System.Text;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
@@ -61,26 +58,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         
         protected const string ByParameterFileWithNoTemplateParameterSetName = "ByParameterFileWithNoTemplate";
 
-        protected RuntimeDefinedParameterDictionary dynamicParameters;
-
-        private Hashtable templateObject;
-
-        private string templateFile;
-
-        private string templateUri;
-
-        private string templateSpecId;
-
         protected string protectedTemplateUri;
 
         protected IReadOnlyDictionary<string, TemplateParameterFileParameter> bicepparamFileParameters;
 
         private ITemplateSpecsClient templateSpecsClient;
-
-        protected DeploymentCmdletBase()
-        {
-            dynamicParameters = new RuntimeDefinedParameterDictionary();
-        }
 
         [Parameter(ParameterSetName = TemplateObjectParameterObjectParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "A hash table which represents the parameters.")]
@@ -167,7 +149,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         public SwitchParameter SkipTemplateParameterPrompt { get; set; }
 
         /// <summary>
-        /// Gets or sets the Template Specs Azure SDK client
+        /// TemplateSpecsClient for making template spec sdk calls. On first access, it will be initialized before being returned.
         /// </summary>
         public ITemplateSpecsClient TemplateSpecsClient
         {
@@ -190,151 +172,64 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 
         protected override void OnBeginProcessing()
         {
+            // Resolve file paths to ensure the files exist:
             TemplateFile = this.TryResolvePath(TemplateFile);
             TemplateParameterFile = this.TryResolvePath(TemplateParameterFile);
             base.OnBeginProcessing();
         }
 
-        private string GetParameterJsonFilePath()
-        {
-            if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
-            {
-                return null;
-            }
-            
-            if (!string.IsNullOrEmpty(TemplateParameterUri))
-            {
-                return TemplateParameterUri;
-            }
+        #region Dynamic Parameters
 
-            return this.ResolvePath(TemplateParameterFile);
-        }
-
+        // TODO: Why does tab completion on an unfinished cmdlet trigger this?
         public new virtual object GetDynamicParameters()
         {
-            if (BicepUtility.IsBicepFile(TemplateUri))
-            {
-                throw new PSInvalidOperationException($"The -{nameof(TemplateUri)} parameter is not supported with .bicep files. Please download the file and pass it using -{nameof(TemplateFile)}.");
-            }
-
             var isBicepParamFile = BicepUtility.IsBicepparamFile(TemplateParameterFile);
-            if (!isBicepParamFile && string.IsNullOrEmpty(TemplateFile) && string.IsNullOrEmpty(TemplateUri) && string.IsNullOrEmpty(TemplateSpecId) && TemplateObject == null)
-            {
-                throw new PSInvalidOperationException($"One of the -{nameof(TemplateFile)}, -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} parameters must be supplied unless a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
-            }
 
-            if (BicepUtility.IsBicepparamFile(TemplateParameterFile) && !string.IsNullOrEmpty(TemplateFile) && !BicepUtility.IsBicepFile(TemplateFile))
-            {
-                throw new PSInvalidOperationException($"Parameter -{nameof(TemplateFile)} only permits .bicep files if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
-            }
+            // TODO: It would be nice if we could avoid running this when tab complete is being used for other purposes (like file path completion). Catch the context that
+            // the cmdlet is being called from.
 
-            if (BicepUtility.IsBicepparamFile(TemplateParameterFile) && (!string.IsNullOrEmpty(TemplateUri) || !string.IsNullOrEmpty(TemplateSpecId) || TemplateObject != null))
-            {
-                throw new PSInvalidOperationException($"Parameters -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} cannot be used if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
-            }
+            DynamicParameterValidityCheck(isBicepParamFile);
 
-            if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
+            if (isBicepParamFile)
             {
+                // A bicep param file can include a template link that needs to be extracted, along with the params themselves:
                 BuildAndUseBicepParameters(emitWarnings: false);
             }
 
             if (BicepUtility.IsBicepFile(TemplateFile))
             {
+                // Build bicep file:
                 BuildAndUseBicepTemplate();
             }
-               
+
+            var dynamicParameters = new RuntimeDefinedParameterDictionary();
+            
             if (!this.IsParameterBound(c => c.SkipTemplateParameterPrompt))
             {
                 // Resolve the static parameter names for this cmdlet:
                 string[] staticParameterNames = this.GetStaticParameterNames();
-                var combinedParameterObject = GetCombinedTemplateParameterObject();
-                var jsonParamFilePath = BicepUtility.IsBicepparamFile(TemplateParameterFile) ? null : this.ResolvePath(TemplateParameterFile);
+                
+                // TemplateParameterObject or the converted template parameters extracted from the bicep param file are stored in their own object here, as they are easily
+                // consumable in their current form, whereas parameters from TemplateParameterFile and TemplateParameterUri are extracted later in execution if needed:
+                var templateParameterObject = bicepparamFileParameters != null ? RestructureBicepParameters() : TemplateParameterObject;
+              
+                // TODO: clients instantied sometimes?
 
-                if (TemplateObject != null && TemplateObject != templateObject)
+                if (TemplateObject != null) 
                 {
-                    templateObject = TemplateObject;
-                    dynamicParameters = TemplateUtility.GetTemplateParametersFromFile(
-                        TemplateObject,
-                        combinedParameterObject,
-                        GetParameterJsonFilePath(),
-                        staticParameterNames);
+                    dynamicParameters = GetDynamicParametersFromTemplateObject(templateParameterObject, staticParameterNames);
                 }
-                else if (!string.IsNullOrEmpty(TemplateFile) &&
-                    !TemplateFile.Equals(templateFile, StringComparison.OrdinalIgnoreCase))
+                else if (!string.IsNullOrEmpty(TemplateFile))
                 {
-                    templateFile = TemplateFile;
-                    dynamicParameters = TemplateUtility.GetTemplateParametersFromFile(
-                        this.ResolvePath(TemplateFile),
-                        combinedParameterObject,
-                        GetParameterJsonFilePath(),
-                        staticParameterNames);
+                    dynamicParameters = GetDynamicParametersFromTemplateFile(templateParameterObject, staticParameterNames);
                 }
-                else if (!string.IsNullOrEmpty(TemplateUri) &&
-                    !TemplateUri.Equals(templateUri, StringComparison.OrdinalIgnoreCase))
+                else if (!string.IsNullOrEmpty(TemplateUri))
                 {
-                    if (string.IsNullOrEmpty(protectedTemplateUri))
-                    {
-                        templateUri = TemplateUri;
-                    }
-                    else
-                    {
-                        templateUri = protectedTemplateUri;
-                    }
-
-                    dynamicParameters = TemplateUtility.GetTemplateParametersFromFile(
-                        templateUri,
-                        combinedParameterObject,
-                        GetParameterJsonFilePath(),
-                        staticParameterNames);
+                    dynamicParameters = GetDynamicParametersFromTemplateUri(templateParameterObject, staticParameterNames);
                 }
-                else if (!string.IsNullOrEmpty(TemplateSpecId) &&
-                    !TemplateSpecId.Equals(templateSpecId, StringComparison.OrdinalIgnoreCase))
+                else if (!string.IsNullOrEmpty(TemplateSpecId))
                 {
-                    templateSpecId = TemplateSpecId;
-                    ResourceIdentifier resourceIdentifier = new ResourceIdentifier(templateSpecId);
-                    if(!resourceIdentifier.ResourceType.Equals("Microsoft.Resources/templateSpecs/versions", StringComparison.OrdinalIgnoreCase))
-                    {
-                        throw new PSArgumentException("No version found in Resource ID");
-                    }
-
-                    if (!string.IsNullOrEmpty(resourceIdentifier.Subscription) &&
-                        TemplateSpecsClient.SubscriptionId != resourceIdentifier.Subscription)
-                    {
-                        // The template spec is in a different subscription than our default
-                        // context. Force the client to use that subscription:
-                        TemplateSpecsClient.SubscriptionId = resourceIdentifier.Subscription;
-                    }
-                    JObject templateObj = (JObject)null;
-                    try
-                    {
-                        var templateSpecVersion = TemplateSpecsClient.TemplateSpecVersions.Get(
-                            ResourceIdUtility.GetResourceGroupName(templateSpecId),
-                            ResourceIdUtility.GetResourceName(templateSpecId).Split('/')[0],
-                            resourceIdentifier.ResourceName);
-
-                        if (!(templateSpecVersion.MainTemplate is JObject))
-                        {
-                            throw new InvalidOperationException("Unexpected type."); // Sanity check
-                        }
-                        templateObj = (JObject)templateSpecVersion.MainTemplate;
-                    }
-                    catch (TemplateSpecsErrorException e)
-                    {
-                        //If the templateSpec resourceID is pointing to a non existant resource
-                        if(e.Response.StatusCode.Equals(HttpStatusCode.NotFound))
-                        {
-                            //By returning null, we are introducing parity in the way templateURI and templateSpecId are validated. Gives a cleaner error message in line with the error message for invalid templateURI
-                            return null;
-                        }
-                        //Throw for any other error that is not due to a 404 for the template resource.
-                        throw;
-                    }
-
-                    dynamicParameters = TemplateUtility.GetTemplateParametersFromFile(
-                        templateObj,
-                        combinedParameterObject,
-                        GetParameterJsonFilePath(),
-                        staticParameterNames);
+                    dynamicParameters = GetDynamicParametersFromTemplateSpecId(templateParameterObject, staticParameterNames);
                 }
             }
 
@@ -343,100 +238,129 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             return dynamicParameters;
         }
 
-        private static void AddToParametersHashtable(IReadOnlyDictionary<string, TemplateParameterFileParameter> parameters, Hashtable parameterObject)
+        private void DynamicParameterValidityCheck(bool isBicepParamFile)
         {
-            parameters.ForEach(dp =>
+            if (BicepUtility.IsBicepFile(TemplateUri))
             {
-                var parameter = new Hashtable();
-                if (dp.Value.Value != null)
-                {
-                    parameter.Add("value", dp.Value.Value);
-                }
-                if (dp.Value.Reference != null)
-                {
-                    parameter.Add("reference", dp.Value.Reference);
-                }
+                throw new PSInvalidOperationException($"The -{nameof(TemplateUri)} parameter is not supported with .bicep files. Please download the file and pass it using -{nameof(TemplateFile)}.");
+            }
 
-                parameterObject[dp.Key] = parameter;
-            });
+            if (!isBicepParamFile && string.IsNullOrEmpty(TemplateFile) && string.IsNullOrEmpty(TemplateUri) && string.IsNullOrEmpty(TemplateSpecId) && TemplateObject == null)
+            {
+                throw new PSInvalidOperationException($"One of the -{nameof(TemplateFile)}, -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} parameters must be supplied unless a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
+            }
+
+            if (isBicepParamFile && !string.IsNullOrEmpty(TemplateFile) && !BicepUtility.IsBicepFile(TemplateFile))
+            {
+                throw new PSInvalidOperationException($"Parameter -{nameof(TemplateFile)} only permits .bicep files if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
+            }
+
+            if (isBicepParamFile && (!string.IsNullOrEmpty(TemplateUri) || !string.IsNullOrEmpty(TemplateSpecId) || TemplateObject != null))
+            {
+                throw new PSInvalidOperationException($"Parameters -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} cannot be used if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
+            }
         }
 
-        protected Hashtable GetTemplateParameterObject()
+        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateFile(Hashtable templateParameterObject, string[] staticParameterNames)
         {
-            var parameterObject = new Hashtable();
-            if (bicepparamFileParameters != null)
-            {
-                BuildAndUseBicepParameters(emitWarnings: true);
-                AddToParametersHashtable(bicepparamFileParameters, parameterObject);
-                return parameterObject;
-            }
-
-            if (TemplateParameterObject != null)
-            {
-                foreach (var parameterKey in TemplateParameterObject.Keys)
-                {
-                    // Let default behavior of a value parameter if not a KeyVault reference Hashtable
-                    var hashtableParameter = TemplateParameterObject[parameterKey] as Hashtable;
-                    if (hashtableParameter != null && hashtableParameter.ContainsKey("reference"))
-                    {
-                        parameterObject[parameterKey] = TemplateParameterObject[parameterKey];
-                    }
-                    else
-                    {
-                        parameterObject[parameterKey] = new Hashtable { { "value", TemplateParameterObject[parameterKey] } };
-                    }
-                }
-            }
-
-            // Load parameters from the file
-            string templateParameterFilePath = this.ResolvePath(TemplateParameterFile);
-            if (templateParameterFilePath != null)
-            {
-                // Check whether templateParameterFilePath exists
-                if (FileUtilities.DataStore.FileExists(templateParameterFilePath))
-                {
-                    var parametersFromFile = TemplateUtility.ParseTemplateParameterFileContents(templateParameterFilePath);
-                    AddToParametersHashtable(parametersFromFile, parameterObject);
-                }
-                else
-                {
-                    // To not break previous behavior, just output a warning.
-                    WriteWarning("${templateParameterFilePath} does not exist");
-                }
-            }
-
-            var dynamicParams = GetDynamicParametersDictionary();
-            foreach (var param in dynamicParams)
-            {
-                parameterObject[param.Key] = new Hashtable { { "value", param.Value } };
-            }
-
-            return parameterObject;
+            return TemplateUtility.GetTemplateParametersFromFile(
+                this.ResolvePath(TemplateFile),
+                templateParameterObject,
+                GetParameterJsonFilePath(),
+                staticParameterNames);
         }
 
-        protected string GetDeploymentDebugLogLevel(string deploymentDebugLogLevel)
+        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateObject(Hashtable templateParameterObject, string[] staticParameterNames)
         {
-            string debugSetting = string.Empty;
-            if (!string.IsNullOrEmpty(deploymentDebugLogLevel))
+            return TemplateUtility.GetTemplateParametersFromFile(
+                TemplateObject,
+                templateParameterObject,
+                GetParameterJsonFilePath(),
+                staticParameterNames);
+        }
+
+        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateUri(Hashtable templateParameterObject, string[] staticParameterNames)
+        {
+            string templateUri;
+            if (string.IsNullOrEmpty(protectedTemplateUri))
             {
-                switch (deploymentDebugLogLevel.ToLower())
+                templateUri = TemplateUri;
+            }
+            else
+            {
+                templateUri = protectedTemplateUri;
+            }
+
+            return TemplateUtility.GetTemplateParametersFromFile(
+                templateUri,
+                templateParameterObject,
+                GetParameterJsonFilePath(),
+                staticParameterNames);
+        }
+
+        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateSpecId(Hashtable templateParameterObject, string[] staticParameterNames)
+        {
+            ResourceIdentifier resourceIdentifier = new ResourceIdentifier(TemplateSpecId);
+            if (!resourceIdentifier.ResourceType.Equals("Microsoft.Resources/templateSpecs/versions", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new PSArgumentException("No version found in Resource ID");
+            }
+
+            if (!string.IsNullOrEmpty(resourceIdentifier.Subscription) &&
+                TemplateSpecsClient.SubscriptionId != resourceIdentifier.Subscription)
+            {
+                // The template spec is in a different subscription than our default
+                // context. Force the client to use that subscription:
+                TemplateSpecsClient.SubscriptionId = resourceIdentifier.Subscription;
+            }
+            JObject templateObj = (JObject)null;
+            try
+            {
+                var templateSpecVersion = TemplateSpecsClient.TemplateSpecVersions.Get(
+                    ResourceIdUtility.GetResourceGroupName(TemplateSpecId),
+                    ResourceIdUtility.GetResourceName(TemplateSpecId).Split('/')[0],
+                    resourceIdentifier.ResourceName);
+
+                if (!(templateSpecVersion.MainTemplate is JObject))
                 {
-                    case "all":
-                        debugSetting = "RequestContent,ResponseContent";
-                        break;
-                    case "requestcontent":
-                        debugSetting = "RequestContent";
-                        break;
-                    case "responsecontent":
-                        debugSetting = "ResponseContent";
-                        break;
-                    case "none":
-                        debugSetting = null;
-                        break;
+                    throw new InvalidOperationException("Unexpected type."); // Sanity check
+                }
+                templateObj = (JObject)templateSpecVersion.MainTemplate;
+            }
+            catch (TemplateSpecsErrorException e)
+            {
+                // If the templateSpec resourceID is pointing to a non existant resource
+                if (!e.Response.StatusCode.Equals(HttpStatusCode.NotFound))
+                {
+                    // Throw for any other error that is not due to a 404 for the template resource.
+                    throw;
                 }
             }
 
-            return debugSetting;
+            return TemplateUtility.GetTemplateParametersFromFile(
+                templateObj,
+                templateParameterObject,
+                GetParameterJsonFilePath(),
+                staticParameterNames);
+        }
+
+        /// <summary>
+        /// Will get the absolute path of the URI or json TemplateParameterFile. If the TemplateParameterFile
+        /// is a bicep file (not json), we return null.
+        /// </summary>
+        private string GetParameterJsonFilePath()
+        {
+            if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
+            {
+                return null;
+            }
+
+            if (!string.IsNullOrEmpty(TemplateParameterUri))
+            {
+                return TemplateParameterUri;
+            }
+
+            return this.ResolvePath(TemplateParameterFile);
         }
 
         /// <summary>
@@ -472,15 +396,119 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             CmdletInfo cmdletInfo = new CmdletInfo(commandName, this.GetType());
             return cmdletInfo.Parameters.Keys.ToArray();
         }
+        #endregion
 
-        protected void BuildAndUseBicepTemplate()
+        private static void AddToParametersHashtable(IReadOnlyDictionary<string, TemplateParameterFileParameter> parameters, Hashtable parameterObject)
         {
-            var templateJson = BicepUtility.Create().BuildBicepFile(this.ResolvePath(TemplateFile), this.WriteVerbose, this.WriteWarning);
-            TemplateObject = JsonConvert.DeserializeObject<Hashtable>(templateJson);
-            TemplateFile = null;
+            parameters.ForEach(dp =>
+            {
+                var parameter = new Hashtable();
+                if (dp.Value.Value != null)
+                {
+                    parameter.Add("value", dp.Value.Value);
+                }
+                if (dp.Value.Reference != null)
+                {
+                    parameter.Add("reference", dp.Value.Reference);
+                }
+
+                parameterObject[dp.Key] = parameter;
+            });
+        }
+        
+        /// <summary>
+        /// Used to fetch a 
+        /// </summary>
+        /// <returns></returns>
+        protected Hashtable GetTemplateParameterObject()
+        {
+            var parameterObject = new Hashtable();
+
+            // TODO: If this is not equal to null, why would you build again?
+            if (bicepparamFileParameters != null)
+            {   
+                BuildAndUseBicepParameters(emitWarnings: true);
+                
+                AddToParametersHashtable(bicepparamFileParameters, parameterObject);
+                
+                // TODO: How does this work if it isn't picking up dynamic parameters?
+                return parameterObject;
+            }
+
+            // Load parameters from the object:
+            if (TemplateParameterObject != null)
+            {
+                foreach (var parameterKey in TemplateParameterObject.Keys)
+                {
+                    // Let default behavior of a value parameter if not a KeyVault reference Hashtable
+                    var hashtableParameter = TemplateParameterObject[parameterKey] as Hashtable;
+                    if (hashtableParameter != null && hashtableParameter.ContainsKey("reference"))
+                    {
+                        parameterObject[parameterKey] = TemplateParameterObject[parameterKey];
+                    }
+                    else
+                    {
+                        parameterObject[parameterKey] = new Hashtable { { "value", TemplateParameterObject[parameterKey] } };
+                    }
+                }
+            }
+
+            // Load parameters from the file:
+            string templateParameterFilePath = this.ResolvePath(TemplateParameterFile);
+            if (templateParameterFilePath != null)
+            {
+                // Check whether templateParameterFilePath exists
+                if (FileUtilities.DataStore.FileExists(templateParameterFilePath))
+                {
+                    var parametersFromFile = TemplateUtility.ParseTemplateParameterFileContents(templateParameterFilePath);
+                    AddToParametersHashtable(parametersFromFile, parameterObject);
+                }
+                else
+                {
+                    // To not break previous behavior, just output a warning.
+                    WriteWarning("${templateParameterFilePath} does not exist");
+                }
+            }
+
+            // Load in dynamic parameters that were provided.
+            var dynamicParams = GetUsedDynamicParametersAsDictionary();
+            foreach (var param in dynamicParams)
+            {
+                parameterObject[param.Key] = new Hashtable { { "value", param.Value } };
+            }
+
+            return parameterObject;
         }
 
-        private IReadOnlyDictionary<string, object> GetDynamicParametersDictionary()
+        protected string GetDeploymentDebugLogLevel(string deploymentDebugLogLevel)
+        {
+            string debugSetting = string.Empty;
+            if (!string.IsNullOrEmpty(deploymentDebugLogLevel))
+            {
+                switch (deploymentDebugLogLevel.ToLower())
+                {
+                    case "all":
+                        debugSetting = "RequestContent,ResponseContent";
+                        break;
+                    case "requestcontent":
+                        debugSetting = "RequestContent";
+                        break;
+                    case "responsecontent":
+                        debugSetting = "ResponseContent";
+                        break;
+                    case "none":
+                        debugSetting = null;
+                        break;
+                }
+            }
+
+            return debugSetting;
+        }
+
+        /// <summary>
+        /// Fetches currently used dynamic parameters.
+        /// </summary>
+        private IReadOnlyDictionary<string, object> GetUsedDynamicParametersAsDictionary()
         {
             var dynamicParams = PowerShellUtilities.GetUsedDynamicParameters(this.AsJobDynamicParameters, MyInvocation);
 
@@ -489,10 +517,17 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 x => x.Value);
         }
 
+        /// <summary>
+        /// Attempts to build the bicep param file. If no other template file, uri, or spec is present, a template or template spec
+        /// will try to be extracted from the bicep param build output.
+        /// </summary>
+        /// <param name="emitWarnings">Choice for whether to emit bicep build warnings.</param>
+        /// <exception cref="PSInvalidOperationException"></exception>
         protected void BuildAndUseBicepParameters(bool emitWarnings)
         {
             BicepUtility.OutputCallback nullCallback = null;
-            var output = BicepUtility.Create().BuildBicepParamFile(this.ResolvePath(TemplateParameterFile), GetDynamicParametersDictionary(), this.WriteVerbose, emitWarnings ? this.WriteWarning : nullCallback);
+            // TODO: Why did we choose to override here rather than the normal way? Why are bicepparams special?
+            var output = BicepUtility.Create().BuildBicepParamFile(this.ResolvePath(TemplateParameterFile), GetUsedDynamicParametersAsDictionary(), this.WriteVerbose, emitWarnings ? this.WriteWarning : nullCallback);
             bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
 
             if (TemplateObject == null && 
@@ -514,38 +549,50 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 else
                 {
                     // This shouldn't happen in practice - the Bicep CLI will return either templateJson or templateSpecId (or fail to run entirely).
+                    // TODO: This should happen during dynamic parameter execution when the param file does not include a template.
+                    // For some reason though the evaluation of the param file is thinking it has a template even though it shouldn't.
                     throw new PSInvalidOperationException(string.Format(ProjectResources.InvalidFilePath, TemplateParameterFile));
                 }
             }
         }
 
-        private Hashtable GetCombinedTemplateParameterObject()
+        /// <summary>
+        /// Constructs a TemplateObject from the bicep file located at the TemplateFile address. 
+        /// </summary>
+        protected void BuildAndUseBicepTemplate()
         {
-            if (bicepparamFileParameters != null)
-            {
-                // The TemplateParameterObject property expects parameters to be in a different format to the parameters file JSON.
-                // Here we convert from { "foo": { "value": "blah" } } to { "foo": "blah" }
-                // with the exception of KV secret references which are left as { "foo": { "reference": ... } }
-                var parameters = new Hashtable();
-                foreach (var paramName in bicepparamFileParameters.Keys)
-                {
-                    var param = bicepparamFileParameters[paramName];
-                    if (param.Value != null)
-                    {
-                        parameters[paramName] = param.Value;
-                    }
-                    if (param.Reference != null)
-                    {
-                        var parameter = new Hashtable();
-                        parameter.Add("reference", param.Reference);
-                        parameters[paramName] = parameter;
-                    }
-                }
+            var templateJson = BicepUtility.Create().BuildBicepFile(this.ResolvePath(TemplateFile), this.WriteVerbose, this.WriteWarning);
+            TemplateObject = JsonConvert.DeserializeObject<Hashtable>(templateJson);
+            TemplateFile = null;
+        }
 
-                return parameters;
+        /// <summary>
+        /// Converts bicep file parameters into format that matches TemplateParameterObject.
+        /// </summary>
+        private Hashtable RestructureBicepParameters()
+        { 
+            // The TemplateParameterObject property expects parameters to be in a different format to the parameters file JSON.
+            // Here we convert from { "foo": { "value": "blah" } } to { "foo": "blah" }
+            // with the exception of KV secret references which are left as { "foo": { "reference": ... } }
+            var parameters = new Hashtable();
+            if (bicepparamFileParameters == null) return parameters;
+            
+            foreach (var paramName in bicepparamFileParameters.Keys)
+            {
+                var param = bicepparamFileParameters[paramName];
+                if (param.Value != null)
+                {
+                    parameters[paramName] = param.Value;
+                }
+                if (param.Reference != null)
+                {
+                    var parameter = new Hashtable();
+                    parameter.Add("reference", param.Reference);
+                    parameters[paramName] = parameter;
+                }
             }
 
-            return TemplateParameterObject;
+            return parameters;
         }
     }
 }
