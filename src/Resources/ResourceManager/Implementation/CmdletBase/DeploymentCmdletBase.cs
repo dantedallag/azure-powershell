@@ -526,7 +526,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         protected void BuildAndUseBicepParameters(bool emitWarnings)
         {
             BicepUtility.OutputCallback nullCallback = null;
-            // TODO: Why did we choose to override here rather than the normal way? Why are bicepparams special?
             var output = BicepUtility.Create().BuildBicepParamFile(this.ResolvePath(TemplateParameterFile), GetUsedDynamicParametersAsDictionary(), this.WriteVerbose, emitWarnings ? this.WriteWarning : nullCallback);
             bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
 
