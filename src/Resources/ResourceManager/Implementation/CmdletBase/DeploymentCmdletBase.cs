@@ -30,6 +30,8 @@ using System.Linq;
 using System.Management.Automation;
 using System.Net;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
+using System.Management.Automation.Language;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 {
@@ -59,8 +61,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         protected const string ByParameterFileWithNoTemplateParameterSetName = "ByParameterFileWithNoTemplate";
 
         protected string protectedTemplateUri;
-
-        protected IReadOnlyDictionary<string, TemplateParameterFileParameter> bicepparamFileParameters;
 
         private ITemplateSpecsClient templateSpecsClient;
 
@@ -180,7 +180,40 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 
         #region Dynamic Parameters
 
-        // TODO: Why does tab completion on an unfinished cmdlet trigger this?
+        private string ExtractTemplateContent()
+        {
+            // Template Content:
+            string templateContent = null;
+            if (TemplateObject != null) 
+            {
+                templateContent = TemplateUtility.GetTemplateContentFromHashtable(TemplateObject);
+            }
+            else if (!string.IsNullOrEmpty(TemplateFile) || !string.IsNullOrEmpty(TemplateUri))
+            {
+                var file = !string.IsNullOrEmpty(TemplateFile) ? TemplateFile : (!string.IsNullOrEmpty(protectedTemplateUri)? protectedTemplateUri : TemplateUri);
+                templateContent = TemplateUtility.GetTemplateContentFromFile(file);
+            }
+            else if (!string.IsNullOrEmpty(TemplateSpecId))
+            {
+                templateContent = TemplateUtility.GetTemplateContentFromTemplateSpec(TemplateSpecId, TemplateSpecsClient);
+            }
+            
+            return templateContent;
+        }
+
+        private Hashtable ExtractTemplateParameterContent()
+        {
+            // Template Parameter Content:
+            Hashtable templateParameterContent = TemplateParameterObject;
+            if (!string.IsNullOrEmpty(TemplateParameterFile) || !string.IsNullOrEmpty(TemplateParameterUri))
+            {
+                var file = !string.IsNullOrEmpty(TemplateParameterFile) ? TemplateParameterFile : TemplateParameterUri;
+                templateParameterContent = TemplateUtility.GetTemplateParameterContentFromFile(file);
+            }
+
+            return templateParameterContent;
+        }
+
         public new virtual object GetDynamicParameters()
         {
             var isBicepParamFile = BicepUtility.IsBicepparamFile(TemplateParameterFile);
@@ -188,6 +221,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             // TODO: It would be nice if we could avoid running this when tab complete is being used for other purposes (like file path completion). Catch the context that
             // the cmdlet is being called from.
 
+            // TODO: This basically needs to run parameter set checks.
             DynamicParameterValidityCheck(isBicepParamFile);
 
             if (isBicepParamFile)
@@ -208,29 +242,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             {
                 // Resolve the static parameter names for this cmdlet:
                 string[] staticParameterNames = this.GetStaticParameterNames();
-                
-                // TemplateParameterObject or the converted template parameters extracted from the bicep param file are stored in their own object here, as they are easily
-                // consumable in their current form, whereas parameters from TemplateParameterFile and TemplateParameterUri are extracted later in execution if needed:
-                var templateParameterObject = bicepparamFileParameters != null ? RestructureBicepParameters() : TemplateParameterObject;
-              
-                // TODO: clients instantied sometimes?
+                var templateContent = ExtractTemplateContent();
+                var templateParams = ExtractTemplateParameterContent();
 
-                if (TemplateObject != null) 
-                {
-                    dynamicParameters = GetDynamicParametersFromTemplateObject(templateParameterObject, staticParameterNames);
-                }
-                else if (!string.IsNullOrEmpty(TemplateFile))
-                {
-                    dynamicParameters = GetDynamicParametersFromTemplateFile(templateParameterObject, staticParameterNames);
-                }
-                else if (!string.IsNullOrEmpty(TemplateUri))
-                {
-                    dynamicParameters = GetDynamicParametersFromTemplateUri(templateParameterObject, staticParameterNames);
-                }
-                else if (!string.IsNullOrEmpty(TemplateSpecId))
-                {
-                    dynamicParameters = GetDynamicParametersFromTemplateSpecId(templateParameterObject, staticParameterNames);
-                }
+                dynamicParameters = ExtractDynamicParametersForDeployment();
             }
 
             RegisterDynamicParameters(dynamicParameters);
@@ -240,6 +255,18 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 
         private void DynamicParameterValidityCheck(bool isBicepParamFile)
         {
+            // Ensure not more than one template is set:
+            if (!(TemplateFile == null ^ TemplateUri == null ^ TemplateObject == null ^ TemplateSpecId == null))
+            {
+
+            }
+
+            // Ensure not more than one template parameter is set:
+            if (!(TemplateParameterFile == null ^ TemplateParameterObject == null ^ TemplateParameterUri == null))
+            {
+
+            }
+            
             if (BicepUtility.IsBicepFile(TemplateUri))
             {
                 throw new PSInvalidOperationException($"The -{nameof(TemplateUri)} parameter is not supported with .bicep files. Please download the file and pass it using -{nameof(TemplateFile)}.");
@@ -259,89 +286,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             {
                 throw new PSInvalidOperationException($"Parameters -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} cannot be used if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
             }
-        }
-
-        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateFile(Hashtable templateParameterObject, string[] staticParameterNames)
-        {
-            return TemplateUtility.GetTemplateParametersFromFile(
-                this.ResolvePath(TemplateFile),
-                templateParameterObject,
-                GetParameterJsonFilePath(),
-                staticParameterNames);
-        }
-
-        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateObject(Hashtable templateParameterObject, string[] staticParameterNames)
-        {
-            return TemplateUtility.GetTemplateParametersFromFile(
-                TemplateObject,
-                templateParameterObject,
-                GetParameterJsonFilePath(),
-                staticParameterNames);
-        }
-
-        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateUri(Hashtable templateParameterObject, string[] staticParameterNames)
-        {
-            string templateUri;
-            if (string.IsNullOrEmpty(protectedTemplateUri))
-            {
-                templateUri = TemplateUri;
-            }
-            else
-            {
-                templateUri = protectedTemplateUri;
-            }
-
-            return TemplateUtility.GetTemplateParametersFromFile(
-                templateUri,
-                templateParameterObject,
-                GetParameterJsonFilePath(),
-                staticParameterNames);
-        }
-
-        private RuntimeDefinedParameterDictionary GetDynamicParametersFromTemplateSpecId(Hashtable templateParameterObject, string[] staticParameterNames)
-        {
-            ResourceIdentifier resourceIdentifier = new ResourceIdentifier(TemplateSpecId);
-            if (!resourceIdentifier.ResourceType.Equals("Microsoft.Resources/templateSpecs/versions", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new PSArgumentException("No version found in Resource ID");
-            }
-
-            if (!string.IsNullOrEmpty(resourceIdentifier.Subscription) &&
-                TemplateSpecsClient.SubscriptionId != resourceIdentifier.Subscription)
-            {
-                // The template spec is in a different subscription than our default
-                // context. Force the client to use that subscription:
-                TemplateSpecsClient.SubscriptionId = resourceIdentifier.Subscription;
-            }
-            JObject templateObj = (JObject)null;
-            try
-            {
-                var templateSpecVersion = TemplateSpecsClient.TemplateSpecVersions.Get(
-                    ResourceIdUtility.GetResourceGroupName(TemplateSpecId),
-                    ResourceIdUtility.GetResourceName(TemplateSpecId).Split('/')[0],
-                    resourceIdentifier.ResourceName);
-
-                if (!(templateSpecVersion.MainTemplate is JObject))
-                {
-                    throw new InvalidOperationException("Unexpected type."); // Sanity check
-                }
-                templateObj = (JObject)templateSpecVersion.MainTemplate;
-            }
-            catch (TemplateSpecsErrorException e)
-            {
-                // If the templateSpec resourceID is pointing to a non existant resource
-                if (!e.Response.StatusCode.Equals(HttpStatusCode.NotFound))
-                {
-                    // Throw for any other error that is not due to a 404 for the template resource.
-                    throw;
-                }
-            }
-
-            return TemplateUtility.GetTemplateParametersFromFile(
-                templateObj,
-                templateParameterObject,
-                GetParameterJsonFilePath(),
-                staticParameterNames);
         }
 
         /// <summary>
@@ -526,8 +470,12 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         protected void BuildAndUseBicepParameters(bool emitWarnings)
         {
             BicepUtility.OutputCallback nullCallback = null;
+            // Whatever currently used dynamic parameters are set will be used as override parameters when building the parameter file:
             var output = BicepUtility.Create().BuildBicepParamFile(this.ResolvePath(TemplateParameterFile), GetUsedDynamicParametersAsDictionary(), this.WriteVerbose, emitWarnings ? this.WriteWarning : nullCallback);
-            bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
+            var bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
+            
+            // Should I be setting the parameter object here?
+            TemplateParameterObject = RestructureBicepParameters(bicepparamFileParameters);
 
             if (TemplateObject == null && 
                 string.IsNullOrEmpty(TemplateFile) && 
@@ -553,7 +501,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                     throw new PSInvalidOperationException(string.Format(ProjectResources.InvalidFilePath, TemplateParameterFile));
                 }
             }
-        }
+        } 
 
         /// <summary>
         /// Constructs a TemplateObject from the bicep file located at the TemplateFile address. 
@@ -568,7 +516,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         /// <summary>
         /// Converts bicep file parameters into format that matches TemplateParameterObject.
         /// </summary>
-        private Hashtable RestructureBicepParameters()
+        private Hashtable RestructureBicepParameters(IDictionary<string, TemplateParameterFileParameter> bicepparamFileParameters)
         { 
             // The TemplateParameterObject property expects parameters to be in a different format to the parameters file JSON.
             // Here we convert from { "foo": { "value": "blah" } } to { "foo": "blah" }
