@@ -62,8 +62,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 
         protected string protectedTemplateUri;
 
-        private ITemplateSpecsClient templateSpecsClient;
-
         [Parameter(ParameterSetName = TemplateObjectParameterObjectParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "A hash table which represents the parameters.")]
         [Parameter(ParameterSetName = TemplateFileParameterObjectParameterSetName,
@@ -147,6 +145,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                                                     "error out immediately if a parameter was found not to be bound in the template. For non-interactive scripts, -SkipTemplateParameterPrompt can be provided " +
                                                     "to provide a better error message in the case where not all required parameters are satisfied.")]
         public SwitchParameter SkipTemplateParameterPrompt { get; set; }
+
+
+        private ITemplateSpecsClient templateSpecsClient;
 
         /// <summary>
         /// TemplateSpecsClient for making template spec sdk calls. On first access, it will be initialized before being returned.
@@ -245,7 +246,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 var templateContent = ExtractTemplateContent();
                 var templateParams = ExtractTemplateParameterContent();
 
-                dynamicParameters = ExtractDynamicParametersForDeployment();
+                dynamicParameters = TemplateUtility.GetDynamicParameters(templateContent, templateParams, staticParameterNames);
             }
 
             RegisterDynamicParameters(dynamicParameters);
@@ -258,13 +259,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             // Ensure not more than one template is set:
             if (!(TemplateFile == null ^ TemplateUri == null ^ TemplateObject == null ^ TemplateSpecId == null))
             {
-
+                throw new InvalidOperationException("No!");
             }
 
             // Ensure not more than one template parameter is set:
             if (!(TemplateParameterFile == null ^ TemplateParameterObject == null ^ TemplateParameterUri == null))
             {
-
+                throw new InvalidOperationException("No!!");
             }
             
             if (BicepUtility.IsBicepFile(TemplateUri))
@@ -359,6 +360,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 parameterObject[dp.Key] = parameter;
             });
         }
+
+        private 
         
         /// <summary>
         /// Used to fetch a 
@@ -368,14 +371,23 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         {
             var parameterObject = new Hashtable();
 
-            // TODO: If this is not equal to null, why would you build again?
-            if (bicepparamFileParameters != null)
+            if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
             {   
                 BuildAndUseBicepParameters(emitWarnings: true);
-                
-                AddToParametersHashtable(bicepparamFileParameters, parameterObject);
-                
-                // TODO: How does this work if it isn't picking up dynamic parameters?
+                foreach (var parameterKey in TemplateParameterObject.Keys)
+                {
+                    // Let default behavior of a value parameter if not a KeyVault reference Hashtable
+                    var hashtableParameter = TemplateParameterObject[parameterKey] as Hashtable;
+                    if (hashtableParameter != null && hashtableParameter.ContainsKey("reference"))
+                    {
+                        parameterObject[parameterKey] = TemplateParameterObject[parameterKey];
+                    }
+                    else
+                    {
+                        parameterObject[parameterKey] = new Hashtable { { "value", TemplateParameterObject[parameterKey] } };
+                    }
+                }
+
                 return parameterObject;
             }
 
