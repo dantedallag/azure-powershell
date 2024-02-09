@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             if (!string.IsNullOrEmpty(templateParameterFile) || !string.IsNullOrEmpty(templateParameterUri))
             {
                 var file = !string.IsNullOrEmpty(templateParameterFile) ? templateParameterFile : templateParameterUri;
-                templateParameterContent = TemplateUtility.GetTemplateParameterContentFromFile(file);
+                templateParameterContent = GetTemplateParameterContentFromFile(file);
             }
 
             return templateParameterContent;
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             }
         }
 
-        public static Hashtable GetTemplateParameterContentFromFile(string templateParameterFilePath)
+        private static Hashtable GetTemplateParameterContentFromFile(string templateParameterFilePath)
         {
             Hashtable templateParameterContent = null;
 
@@ -233,7 +233,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
 
             return parameters;
         }
-
 
         public static RuntimeDefinedParameterDictionary GetDynamicParameters(string templateContent, Hashtable templateParameterObject, string[] staticParameters)
         {

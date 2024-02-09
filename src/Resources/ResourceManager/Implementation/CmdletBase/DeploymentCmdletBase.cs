@@ -14,21 +14,16 @@
 
 using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
-using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Components;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
 using Microsoft.Azure.Management.Resources;
-using Microsoft.Azure.Management.Resources.Models;
 using Microsoft.WindowsAzure.Commands.Utilities.Common;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management.Automation;
-using System.Net;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
@@ -58,8 +53,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         
         protected const string ByParameterFileWithNoTemplateParameterSetName = "ByParameterFileWithNoTemplate";
 
-        protected string protectedTemplateUri;
-
         [Parameter(ParameterSetName = TemplateObjectParameterObjectParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "A hash table which represents the parameters.")]
         [Parameter(ParameterSetName = TemplateFileParameterObjectParameterSetName,
@@ -83,6 +76,12 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [ValidateNotNullOrEmpty]
         public string TemplateParameterFile { get; set; }
 
+        /// <summary>
+        /// Used to store bicep params that have been built by a bicep parameter file. These are kept as a standalone property and not assigned to TemplateParameterObject, as TemplateParameterFile
+        /// needs to stick around for building the bicep param file in GetTemplateParameterObject() and having both would cause the parameter set resolver to complain. 
+        /// </summary>
+        private Dictionary<string, TemplateParameterFileParameter> bicepparamFileParameters;
+
         [Parameter(ParameterSetName = TemplateObjectParameterUriParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "Uri to the template parameter file.")]
         [Parameter(ParameterSetName = TemplateFileParameterUriParameterSetName,
@@ -103,7 +102,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [Parameter(ParameterSetName = ParameterlessTemplateObjectParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "A hash table which represents the template.")]
         [ValidateNotNull]
-        public Hashtable TemplateObject { get; set; }
+        public Hashtable TemplateObject;
 
         [Parameter(ParameterSetName = TemplateFileParameterObjectParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "Local path to the template file. Supported template file type: json and bicep.")]
@@ -127,6 +126,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [ValidateNotNullOrEmpty]
         public string TemplateUri { get; set; }
 
+        protected string protectedTemplateUri;
+
         [Parameter(ParameterSetName = TemplateSpecResourceIdParameterSetName,
             Mandatory = true, ValueFromPipelineByPropertyName = true, HelpMessage = "Resource ID of the templateSpec to be deployed.")]
         [Parameter(ParameterSetName = TemplateSpecResourceIdParameterUriParameterSetName,
@@ -145,12 +146,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         public SwitchParameter SkipTemplateParameterPrompt { get; set; }
 
         private ITemplateSpecsClient templateSpecsClient;
-
-        /// <summary>
-        /// Used to store bicep params that have been built by a bicep parameter file. These are kept as a standalone property and not assigned to TemplateParameterObject, as TemplateParameterFile
-        /// needs to stick around for building the bicep param file in GetTemplateParameterObject() and having both would cause the parameter set resolver to complain. 
-        /// </summary>
-        private Dictionary<string, TemplateParameterFileParameter> bicepparamFileParameters;
 
         /// <summary>
         /// TemplateSpecsClient for making template spec sdk calls. On first access, it will be initialized before being returned.
@@ -182,6 +177,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             base.OnBeginProcessing();
         }
 
+        /// <summary>
+        /// Runs on every tab complete and before all other logic on execution.
+        /// </summary>
         public new virtual object GetDynamicParameters()
         {
             var isBicepParamFile = BicepUtility.IsBicepparamFile(TemplateParameterFile);
@@ -223,6 +221,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             return dynamicParameters;
         }
 
+        /// <summary>
+        /// Extra checks related to bicep that must be made before attempting to evaluate dynamic parameters.
+        /// </summary>
         private void DynamicParameterValidityCheck(bool isBicepParamFile)
         {   
             if (BicepUtility.IsBicepFile(TemplateUri))
@@ -281,6 +282,18 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         }
 
         /// <summary>
+        /// Fetches currently used dynamic parameters from the command line.
+        /// </summary>
+        private IReadOnlyDictionary<string, object> GetUsedDynamicParametersAsDictionary()
+        {
+            var dynamicParams = PowerShellUtilities.GetUsedDynamicParameters(this.AsJobDynamicParameters, MyInvocation);
+
+            return dynamicParams.ToDictionary(
+                x => ((ParameterAttribute)x.Attributes[0]).HelpMessage,
+                x => x.Value);
+        }
+
+        /// <summary>
         /// Adds parameters to parameterObject hashtable.
         /// </summary>
         private static void AddToParametersHashtable(IReadOnlyDictionary<string, TemplateParameterFileParameter> parameters, Hashtable parameterObject)
@@ -303,11 +316,12 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 
         
         /// <summary>
-        /// Used to fetch a 
+        /// Used to extract the template parameters.
         /// </summary>
         /// <returns></returns>
         protected Hashtable GetTemplateParameterObject()
         {
+
             var parameterObject = new Hashtable();
             
             if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
@@ -389,18 +403,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             }
 
             return debugSetting;
-        }
-
-        /// <summary>
-        /// Fetches currently used dynamic parameters from the command line.
-        /// </summary>
-        private IReadOnlyDictionary<string, object> GetUsedDynamicParametersAsDictionary()
-        {
-            var dynamicParams = PowerShellUtilities.GetUsedDynamicParameters(this.AsJobDynamicParameters, MyInvocation);
-
-            return dynamicParams.ToDictionary(
-                x => ((ParameterAttribute)x.Attributes[0]).HelpMessage,
-                x => x.Value);
         }
 
         /// <summary>
