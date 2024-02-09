@@ -194,7 +194,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             return parameters;
         }
 
+<<<<<<< Updated upstream
         private static RuntimeDefinedParameterDictionary GetDynamicParameters(string templateContent, Hashtable templateParameterObject, string[] staticParameters)
+=======
+        public static RuntimeDefinedParameterDictionary GetDynamicParameters(string templateContent, Hashtable templateParameterObject, string[] staticParameters)
+>>>>>>> Stashed changes
         {
             RuntimeDefinedParameterDictionary dynamicParameters = new RuntimeDefinedParameterDictionary();
 
