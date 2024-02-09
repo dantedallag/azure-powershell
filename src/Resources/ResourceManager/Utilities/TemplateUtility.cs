@@ -12,7 +12,6 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
 using Microsoft.WindowsAzure.Commands.Utilities.Common;
 using Newtonsoft.Json;
@@ -27,19 +26,60 @@ using System.Linq;
 using System.Management.Automation;
 using System.Diagnostics;
 using System.Security;
-using Microsoft.WindowsAzure.Commands.Common;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
 using Newtonsoft.Json.Linq;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Components;
-using System.Threading;
 using Microsoft.Azure.Management.Resources;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
 {
     public static class TemplateUtility
     {
-        public static string GetTemplateContentFromFile(string templateFilePath)
+
+        public static string ExtractTemplateContent(
+            string templateFile,
+            string templateUri,
+            string templateSpecId,
+            ITemplateSpecsClient templateSpecsClient,
+            Hashtable templateObject
+        )
+        {
+            string templateContent = null;
+            if (templateObject != null)
+            {
+                templateContent = GetTemplateContentFromHashtable(templateObject);
+            }
+            else if (!string.IsNullOrEmpty(templateFile) || !string.IsNullOrEmpty(templateUri))
+            {
+                var file = !string.IsNullOrEmpty(templateFile) ? templateFile : templateSpecId;
+                templateContent = GetTemplateContentFromFile(file);
+            }
+            else if (!string.IsNullOrEmpty(templateSpecId))
+            {
+                templateContent = GetTemplateContentFromTemplateSpec(templateSpecId, templateSpecsClient);
+            }
+
+            return templateContent;
+        }
+
+        public static Hashtable ExtractTemplateParameterContent(
+            string templateParameterFile,
+            string templateParameterUri,
+            Hashtable templateParameterObject
+        )
+        {
+            Hashtable templateParameterContent = templateParameterObject;
+            if (!string.IsNullOrEmpty(templateParameterFile) || !string.IsNullOrEmpty(templateParameterUri))
+            {
+                var file = !string.IsNullOrEmpty(templateParameterFile) ? templateParameterFile : templateParameterUri;
+                templateParameterContent = TemplateUtility.GetTemplateParameterContentFromFile(file);
+            }
+
+            return templateParameterContent;
+        }
+
+        private static string GetTemplateContentFromFile(string templateFilePath)
         {
             string templateContent = null;
             if (templateFilePath != null)
@@ -57,7 +97,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             return templateContent;
         }
 
-        public static string GetTemplateContentFromHashtable(Hashtable templateObject)
+        private static string GetTemplateContentFromHashtable(Hashtable templateObject)
         {
             string templateContent = null;
             if (templateObject != null)
@@ -68,7 +108,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             return templateContent;
         }
 
-        public static string GetTemplateContentFromTemplateSpec(string templateSpecId, ITemplateSpecsClient client)
+        private static string GetTemplateContentFromTemplateSpec(string templateSpecId, ITemplateSpecsClient client)
         {
             ResourceIdentifier resourceIdentifier = new ResourceIdentifier(templateSpecId);
             if (!resourceIdentifier.ResourceType.Equals("Microsoft.Resources/templateSpecs/versions", StringComparison.OrdinalIgnoreCase))
@@ -194,19 +234,15 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             return parameters;
         }
 
-<<<<<<< Updated upstream
-        private static RuntimeDefinedParameterDictionary GetDynamicParameters(string templateContent, Hashtable templateParameterObject, string[] staticParameters)
-=======
+
         public static RuntimeDefinedParameterDictionary GetDynamicParameters(string templateContent, Hashtable templateParameterObject, string[] staticParameters)
->>>>>>> Stashed changes
         {
             RuntimeDefinedParameterDictionary dynamicParameters = new RuntimeDefinedParameterDictionary();
 
             // If the template content is not null, parameters should be extracted into dynamic parameters:
             if (!string.IsNullOrEmpty(templateContent))
             {
-                TemplateFile templateFile = null;
-
+                TemplateFile templateFile;
                 try
                 {
                     templateFile = templateContent.FromJson<TemplateFile>();
@@ -229,16 +265,18 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
                 }
             }
 
-            // Parameters defined in the template parameter object should overwrite 
             if (templateParameterObject != null)
             {
-                UpdateParametersWithObject(staticParameters, dynamicParameters, templateParameterObject);
+                SetDynamicParametersPassedInTemplateParameterObject(staticParameters, dynamicParameters, templateParameterObject);
             }
 
             return dynamicParameters;
         }
 
-        private static void UpdateParametersWithObject(string[] staticParameters, RuntimeDefinedParameterDictionary dynamicParameters, Hashtable templateParameterObject)
+        /// <summary>
+        /// Sets the dynamic parameters that are defined in the passed in template parameter object, so that the user is not prompted on execution for a value.
+        /// </summary>
+        private static void SetDynamicParametersPassedInTemplateParameterObject(string[] staticParameters, RuntimeDefinedParameterDictionary dynamicParameters, Hashtable templateParameterObject)
         {
             const string duplicatedParameterSuffix = "FromTemplate";
 
@@ -246,17 +284,14 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Utilities
             {
                 foreach (string paramName in templateParameterObject.Keys)
                 {
-                    // template parameters that clash with static parameter names will receive a suffix on their respective dynamic parameter:
+                    // The template parameters that clash with static parameter names will receive a suffix on their respective dynamic parameter:
                     string dynamicParamName = staticParameters.Contains(paramName, StringComparer.OrdinalIgnoreCase)
                         ? paramName + duplicatedParameterSuffix
                         : paramName;
 
                     if (dynamicParameters.TryGetValue(dynamicParamName, out RuntimeDefinedParameter dynamicParameter))
                     {
-                        dynamicParameter.Value = templateParameterObject[paramName] is TemplateParameterFileParameter TemplateFileParameter
-                            ? TemplateFileParameter.Value
-                            : templateParameterObject[paramName];
-
+                        // Param exists in the template parameter object, so set it:
                         dynamicParameter.IsSet = true;
                         ((ParameterAttribute)dynamicParameter.Attributes[0]).Mandatory = false;
                     }

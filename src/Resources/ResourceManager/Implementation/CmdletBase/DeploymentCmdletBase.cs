@@ -30,8 +30,6 @@ using System.Linq;
 using System.Management.Automation;
 using System.Net;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
-using System.Management.Automation.Language;
-using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 {
@@ -146,8 +144,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                                                     "to provide a better error message in the case where not all required parameters are satisfied.")]
         public SwitchParameter SkipTemplateParameterPrompt { get; set; }
 
-
         private ITemplateSpecsClient templateSpecsClient;
+
+        /// <summary>
+        /// Used to store bicep params that have been built by a bicep parameter file. These are kept as a standalone property and not assigned to TemplateParameterObject, as TemplateParameterFile
+        /// needs to stick around for building the bicep param file in GetTemplateParameterObject() and having both would cause the parameter set resolver to complain. 
+        /// </summary>
+        private Dictionary<string, TemplateParameterFileParameter> bicepparamFileParameters;
 
         /// <summary>
         /// TemplateSpecsClient for making template spec sdk calls. On first access, it will be initialized before being returned.
@@ -179,55 +182,15 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             base.OnBeginProcessing();
         }
 
-        #region Dynamic Parameters
-
-        private string ExtractTemplateContent()
-        {
-            // Template Content:
-            string templateContent = null;
-            if (TemplateObject != null) 
-            {
-                templateContent = TemplateUtility.GetTemplateContentFromHashtable(TemplateObject);
-            }
-            else if (!string.IsNullOrEmpty(TemplateFile) || !string.IsNullOrEmpty(TemplateUri))
-            {
-                var file = !string.IsNullOrEmpty(TemplateFile) ? TemplateFile : (!string.IsNullOrEmpty(protectedTemplateUri)? protectedTemplateUri : TemplateUri);
-                templateContent = TemplateUtility.GetTemplateContentFromFile(file);
-            }
-            else if (!string.IsNullOrEmpty(TemplateSpecId))
-            {
-                templateContent = TemplateUtility.GetTemplateContentFromTemplateSpec(TemplateSpecId, TemplateSpecsClient);
-            }
-            
-            return templateContent;
-        }
-
-        private Hashtable ExtractTemplateParameterContent()
-        {
-            // Template Parameter Content:
-            Hashtable templateParameterContent = TemplateParameterObject;
-            if (!string.IsNullOrEmpty(TemplateParameterFile) || !string.IsNullOrEmpty(TemplateParameterUri))
-            {
-                var file = !string.IsNullOrEmpty(TemplateParameterFile) ? TemplateParameterFile : TemplateParameterUri;
-                templateParameterContent = TemplateUtility.GetTemplateParameterContentFromFile(file);
-            }
-
-            return templateParameterContent;
-        }
-
         public new virtual object GetDynamicParameters()
         {
             var isBicepParamFile = BicepUtility.IsBicepparamFile(TemplateParameterFile);
 
-            // TODO: It would be nice if we could avoid running this when tab complete is being used for other purposes (like file path completion). Catch the context that
-            // the cmdlet is being called from.
-
-            // TODO: This basically needs to run parameter set checks.
             DynamicParameterValidityCheck(isBicepParamFile);
 
             if (isBicepParamFile)
             {
-                // A bicep param file can include a template link that needs to be extracted, along with the params themselves:
+                // A bicep param file can include a template that needs to be extracted, along with the params themselves:
                 BuildAndUseBicepParameters(emitWarnings: false);
             }
 
@@ -242,9 +205,15 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             if (!this.IsParameterBound(c => c.SkipTemplateParameterPrompt))
             {
                 // Resolve the static parameter names for this cmdlet:
-                string[] staticParameterNames = this.GetStaticParameterNames();
-                var templateContent = ExtractTemplateContent();
-                var templateParams = ExtractTemplateParameterContent();
+                string[] staticParameterNames = GetStaticParameterNames();
+                
+                var templateContent = TemplateUtility.ExtractTemplateContent(this.TryResolvePath(TemplateFile), (!string.IsNullOrEmpty(protectedTemplateUri) ? protectedTemplateUri : TemplateUri), 
+                    TemplateSpecId, TemplateSpecsClient, TemplateObject);
+
+                // If bicep params were built, those should be used.
+                var templateParameterObject = bicepparamFileParameters != null ? RestructureBicepParameters(bicepparamFileParameters) : TemplateParameterObject;
+                var templateParams = TemplateUtility.ExtractTemplateParameterContent(this.TryResolvePath(TemplateParameterFile), TemplateParameterUri, 
+                    templateParameterObject);
 
                 dynamicParameters = TemplateUtility.GetDynamicParameters(templateContent, templateParams, staticParameterNames);
             }
@@ -255,19 +224,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         }
 
         private void DynamicParameterValidityCheck(bool isBicepParamFile)
-        {
-            // Ensure not more than one template is set:
-            if (!(TemplateFile == null ^ TemplateUri == null ^ TemplateObject == null ^ TemplateSpecId == null))
-            {
-                throw new InvalidOperationException("No!");
-            }
-
-            // Ensure not more than one template parameter is set:
-            if (!(TemplateParameterFile == null ^ TemplateParameterObject == null ^ TemplateParameterUri == null))
-            {
-                throw new InvalidOperationException("No!!");
-            }
-            
+        {   
             if (BicepUtility.IsBicepFile(TemplateUri))
             {
                 throw new PSInvalidOperationException($"The -{nameof(TemplateUri)} parameter is not supported with .bicep files. Please download the file and pass it using -{nameof(TemplateFile)}.");
@@ -287,25 +244,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             {
                 throw new PSInvalidOperationException($"Parameters -{nameof(TemplateUri)}, -{nameof(TemplateSpecId)} or -{nameof(TemplateObject)} cannot be used if a .bicepparam file is supplied with parameter -{nameof(TemplateParameterFile)}.");
             }
-        }
-
-        /// <summary>
-        /// Will get the absolute path of the URI or json TemplateParameterFile. If the TemplateParameterFile
-        /// is a bicep file (not json), we return null.
-        /// </summary>
-        private string GetParameterJsonFilePath()
-        {
-            if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
-            {
-                return null;
-            }
-
-            if (!string.IsNullOrEmpty(TemplateParameterUri))
-            {
-                return TemplateParameterUri;
-            }
-
-            return this.ResolvePath(TemplateParameterFile);
         }
 
         /// <summary>
@@ -341,8 +279,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             CmdletInfo cmdletInfo = new CmdletInfo(commandName, this.GetType());
             return cmdletInfo.Parameters.Keys.ToArray();
         }
-        #endregion
 
+        /// <summary>
+        /// Adds parameters to parameterObject hashtable.
+        /// </summary>
         private static void AddToParametersHashtable(IReadOnlyDictionary<string, TemplateParameterFileParameter> parameters, Hashtable parameterObject)
         {
             parameters.ForEach(dp =>
@@ -361,7 +301,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             });
         }
 
-        private 
         
         /// <summary>
         /// Used to fetch a 
@@ -370,23 +309,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         protected Hashtable GetTemplateParameterObject()
         {
             var parameterObject = new Hashtable();
-
+            
             if (BicepUtility.IsBicepparamFile(TemplateParameterFile))
             {   
+                // Even though these were already built in dynamic parameter logic, they should be built again in case
+                // used dynamic parameter values have changed:
                 BuildAndUseBicepParameters(emitWarnings: true);
-                foreach (var parameterKey in TemplateParameterObject.Keys)
-                {
-                    // Let default behavior of a value parameter if not a KeyVault reference Hashtable
-                    var hashtableParameter = TemplateParameterObject[parameterKey] as Hashtable;
-                    if (hashtableParameter != null && hashtableParameter.ContainsKey("reference"))
-                    {
-                        parameterObject[parameterKey] = TemplateParameterObject[parameterKey];
-                    }
-                    else
-                    {
-                        parameterObject[parameterKey] = new Hashtable { { "value", TemplateParameterObject[parameterKey] } };
-                    }
-                }
+                AddToParametersHashtable(bicepparamFileParameters, parameterObject);
 
                 return parameterObject;
             }
@@ -426,7 +355,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 }
             }
 
-            // Load in dynamic parameters that were provided.
+            // Load in dynamic parameters that were provided. They will override 
+            // parameters passed in other ways.
             var dynamicParams = GetUsedDynamicParametersAsDictionary();
             foreach (var param in dynamicParams)
             {
@@ -462,7 +392,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         }
 
         /// <summary>
-        /// Fetches currently used dynamic parameters.
+        /// Fetches currently used dynamic parameters from the command line.
         /// </summary>
         private IReadOnlyDictionary<string, object> GetUsedDynamicParametersAsDictionary()
         {
@@ -484,11 +414,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
             BicepUtility.OutputCallback nullCallback = null;
             // Whatever currently used dynamic parameters are set will be used as override parameters when building the parameter file:
             var output = BicepUtility.Create().BuildBicepParamFile(this.ResolvePath(TemplateParameterFile), GetUsedDynamicParametersAsDictionary(), this.WriteVerbose, emitWarnings ? this.WriteWarning : nullCallback);
-            var bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
-            
-            // Should I be setting the parameter object here?
-            TemplateParameterObject = RestructureBicepParameters(bicepparamFileParameters);
+            bicepparamFileParameters = TemplateUtility.ParseTemplateParameterJson(output.parametersJson);
 
+            // If there is no template provided, extraction from the bicep parameter output should be attempted:
             if (TemplateObject == null && 
                 string.IsNullOrEmpty(TemplateFile) && 
                 string.IsNullOrEmpty(TemplateUri) && 
