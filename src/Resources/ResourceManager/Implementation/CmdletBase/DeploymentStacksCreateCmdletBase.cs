@@ -375,7 +375,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
                 if (!string.IsNullOrEmpty(output.templateJson))
                 {
-                    TemplateObject = JsonConvert.DeserializeObject<Hashtable>(output.templateJson);
+                    TemplateObject = output.templateJson.FromJson<Hashtable>();
                 }
                 else if (!string.IsNullOrEmpty(output.templateSpecId))
                 {
@@ -397,7 +397,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         protected void BuildAndUseBicepTemplate()
         {
             var templateJson = BicepUtility.Create().BuildBicepFile(this.ResolvePath(TemplateFile), this.WriteVerbose, this.WriteWarning);
-            TemplateObject = JsonConvert.DeserializeObject<Hashtable>(templateJson);
+            TemplateObject = templateJson.FromJson<Hashtable>();
             TemplateFile = null;
         }
     }

@@ -515,12 +515,12 @@
                 <PropertyName>provisioningState</PropertyName>
               </ListItem>
 						  <ListItem>
-							  <Label>ResourcesCleanupAction</Label>
-                <PropertyName>resourcesCleanupAction</PropertyName>
+							  <Label>ActionOnUnmanage</Label>
+                <PropertyName>actionOnUnmanage</PropertyName>
 						  </ListItem>
               <ListItem>
-                <Label>ResourceGroupsCleanupAction</Label>
-                <PropertyName>resourceGroupsCleanupAction</PropertyName>
+                <Label>CorrelationId</Label>
+                <PropertyName>correlationId</PropertyName>
               </ListItem>
               <ListItem>
                 <Label>DenySettingsMode</Label>

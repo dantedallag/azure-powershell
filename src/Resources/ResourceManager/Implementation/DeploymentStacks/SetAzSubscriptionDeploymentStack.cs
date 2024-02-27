@@ -16,6 +16,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
 {
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.CmdletBase;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
+    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks;
     using Microsoft.Azure.Commands.ResourceManager.Common.ArgumentCompleters;
     using Microsoft.Azure.Commands.ResourceManager.Common.Tags;
     using Microsoft.Azure.Management.Resources.Models;
@@ -53,14 +54,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [ValidateNotNullOrEmpty]
         public string DeploymentResourceGroupName { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Signal to delete both unmanaged Resources and ResourceGroups after deleting stack.")]
-        public SwitchParameter DeleteAll { get; set; }
-
-        [Parameter(Mandatory = false, HelpMessage = "Signal to delete unmanaged stack Resources after deleting stack.")]
-        public SwitchParameter DeleteResources { get; set; }
-
-        [Parameter(Mandatory = false, HelpMessage = "Signal to delete unmanaged stack ResourceGroups after deleting stack.")]
-        public SwitchParameter DeleteResourceGroups { get; set; }
+        [Parameter(Mandatory = true, HelpMessage = "Action to take on resources that become unmanaged on deletion or update of the deployment stack. Possible values include: " +
+            "'detachAll' (do not delete any unmanaged resources), 'deleteResources' (delete all unmanaged resources that are not RGs or MGs)," +
+            " and 'deleteAll' (delete every unmanaged resource).")]
+        public PSActionOnUnmanage ActionOnUnmanage { get; set; }
 
         [Parameter(Mandatory = true, HelpMessage = "Mode for DenySettings. Possible values include: 'denyDelete', 'denyWriteAndDelete', and 'none'.")]
         public PSDenySettingsMode DenySettingsMode { get; set; }
@@ -92,8 +89,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         {
             try
             {
-                var shouldDeleteResources = (DeleteAll.ToBool() || DeleteResources.ToBool()) ? true : false;
-                var shouldDeleteResourceGroups = (DeleteAll.ToBool() || DeleteResourceGroups.ToBool()) ? true : false;
+                var shouldDeleteResources = (ActionOnUnmanage is PSActionOnUnmanage.DeleteAll || ActionOnUnmanage is PSActionOnUnmanage.DeleteResources) ? true : false;
+                var shouldDeleteResourceGroups = (ActionOnUnmanage is PSActionOnUnmanage.DeleteAll) ? true : false;
+                var shouldDeleteManagementGroups = (ActionOnUnmanage is PSActionOnUnmanage.DeleteAll) ? true : false;
 
                 // construct deploymentScope if ResourceGroup was provided
                 var deploymentScope = DeploymentResourceGroupName != null ? "/subscriptions/" + DeploymentStacksSdkClient.DeploymentStacksClient.SubscriptionId
@@ -102,7 +100,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                 var currentStack = DeploymentStacksSdkClient.GetSubscriptionDeploymentStack(Name, throwIfNotExists: false);
                 if (currentStack != null && Tag == null)
                 {
-                    Tag = TagsConversionHelper.CreateTagHashtable(currentStack.Tags);
+                    Tag = TagsConversionHelper.CreateTagHashtable(currentStack.tags);
                 }
 
                 Action createOrUpdateAction = () =>
@@ -119,7 +117,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                         description: Description,
                         resourcesCleanupAction: shouldDeleteResources ? "delete" : "detach",
                         resourceGroupsCleanupAction: shouldDeleteResourceGroups ? "delete" : "detach",
-                        managementGroupsCleanupAction: "detach",
+                        managementGroupsCleanupAction: shouldDeleteManagementGroups ? "delete" : "detach",
                         deploymentScope: deploymentScope,
                         denySettingsMode: DenySettingsMode.ToString(),
                         denySettingsExcludedPrincipals: DenySettingsExcludedPrincipal,

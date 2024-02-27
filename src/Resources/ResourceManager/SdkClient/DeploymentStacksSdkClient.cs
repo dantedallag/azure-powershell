@@ -33,6 +33,7 @@ using Microsoft.Azure.Management.Resources.Models;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.Deployments;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 {
@@ -447,10 +448,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return new PSDeploymentStack(finalStack);
         }
 
-        internal void DeleteResourceGroupDeploymentStack(string resourceGroupName, string name, string resourcesCleanupAction, string resourceGroupsCleanupAction)
+        internal void DeleteResourceGroupDeploymentStack(string resourceGroupName, string name, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
         {
             var deleteResponse = DeploymentStacksClient.DeploymentStacks
-                .DeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, name, resourcesCleanupAction, resourceGroupsCleanupAction)
+                .DeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
                 .GetAwaiter()
                 .GetResult();
 
@@ -464,9 +465,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return;
         }
 
-        internal void DeleteSubscriptionDeploymentStack(string name, string resourcesCleanupAction, string resourceGroupsCleanupAction)
+        internal void DeleteSubscriptionDeploymentStack(string name, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
         {
-            var deleteResponse = DeploymentStacksClient.DeploymentStacks.DeleteAtSubscriptionWithHttpMessagesAsync(name, resourcesCleanupAction, resourceGroupsCleanupAction)
+            var deleteResponse = DeploymentStacksClient.DeploymentStacks.DeleteAtSubscriptionWithHttpMessagesAsync(name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
                 .GetAwaiter()
                 .GetResult();
 
@@ -522,6 +523,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 tags
                 );
 
+            // var validation = DeploymentStacksClient.DeploymentStacks.(deploymentStackName, deploymentStackModel);
+
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtSubscription(deploymentStackName, deploymentStackModel);
             var getStackFunc = this.GetStackAction(deploymentStackName, "subscription");
 
@@ -537,10 +540,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return new PSDeploymentStack(finalStack);
         }
 
-        internal void DeleteManagementGroupDeploymentStack(string name, string managementGroupId, string resourcesCleanupAction, string resourceGroupsCleanupAction)
+        internal void DeleteManagementGroupDeploymentStack(string name, string managementGroupId, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
         {
             var deleteResponse = DeploymentStacksClient.DeploymentStacks
-                    .DeleteAtManagementGroupWithHttpMessagesAsync(managementGroupId, name, resourcesCleanupAction, resourceGroupsCleanupAction)
+                    .DeleteAtManagementGroupWithHttpMessagesAsync(managementGroupId, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
                     .GetAwaiter()
                     .GetResult();
 
@@ -696,18 +699,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
             else if (parameters != null)
             {
-                Dictionary<string, object> parametersDictionary = parameters?.ToDictionary(false);
-                string parametersContent = parametersDictionary != null
-                    ? PSJsonSerializer.Serialize(parametersDictionary)
-                    : null;
-                deploymentStackModel.Parameters = !string.IsNullOrEmpty(parametersContent)
-                    ? JObject.Parse(parametersContent)
-                    : null;
+                deploymentStackModel.Parameters = ConvertParameterHashtableToDictionary(parameters);
             }
 
             return deploymentStackModel;
         }
-
 
         private void errorValidation(DeploymentStack deploymentStack)
         {
@@ -726,6 +722,28 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 
                 WriteError(sb.ToString());
             }
+        }
+
+        private IDictionary<string, DeploymentParameter> ConvertParameterHashtableToDictionary(Hashtable parameters)
+        {
+            var paramDictionary = new Dictionary<string, DeploymentParameter>();
+
+            foreach (string key in parameters.Keys)
+            {
+                paramDictionary[key] = new DeploymentParameter();
+                var paramTable = (Hashtable)parameters[key];
+
+                if (paramTable["reference"] != null)
+                {
+                    paramDictionary[key].Reference = JsonConvert.DeserializeObject<KeyVaultParameterReference>(paramTable["reference"].ToString());
+                }
+                else
+                {
+                    paramDictionary[key].Value = paramTable["value"];
+                }
+            }
+
+            return paramDictionary;
         }
 
         private DeploymentStack waitStackCompletion(Func<Task<AzureOperationResponse<DeploymentStack>>> getStack, params string[] status)
@@ -816,62 +834,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 WriteVerbose("DeploymentOperations polling failed");
             }
             return stack;
-        }
-
-
-        public PSDeploymentStack UpdateResourceGroupDeploymentStack(
-            string deploymentStackName,
-            string resourceGroupName,
-            string templateUri,
-            string templateSpec,
-            string templateJson,
-            string parameterUri,
-            Hashtable parameters,
-            string description
-            )
-        {
-            var deploymentStackModel = new DeploymentStack
-            {
-                Description = description
-            };
-
-            DeploymentStacksTemplateLink templateLink = new DeploymentStacksTemplateLink();
-            if (templateSpec != null)
-            {
-                templateLink.Id = templateSpec;
-                deploymentStackModel.TemplateLink = templateLink;
-            }
-            else if (Uri.IsWellFormedUriString(templateUri, UriKind.Absolute))
-            {
-                templateLink.Uri = templateUri;
-                deploymentStackModel.TemplateLink = templateLink;
-            }
-            else
-            {
-                deploymentStackModel.Template = JObject.Parse(templateJson ?? FileUtilities.DataStore.ReadFileAsText(templateUri));
-            }
-
-            if (Uri.IsWellFormedUriString(parameterUri, UriKind.Absolute))
-            {
-                DeploymentStacksParametersLink parametersLink = new DeploymentStacksParametersLink();
-                parametersLink.Uri = parameterUri;
-                deploymentStackModel.ParametersLink = parametersLink;
-            }
-
-            else if (parameters != null)
-            {
-                Dictionary<string, object> parametersDictionary = parameters?.ToDictionary(false);
-                string parametersContent = parametersDictionary != null
-                    ? PSJsonSerializer.Serialize(parametersDictionary)
-                    : null;
-                deploymentStackModel.Parameters = !string.IsNullOrEmpty(parametersContent)
-                    ? JObject.Parse(parametersContent)
-                    : null;
-            }
-
-            var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel);
-            errorValidation(deploymentStack);
-            return new PSDeploymentStack(deploymentStack);
         }
 
         private void WriteVerbose(string progress)

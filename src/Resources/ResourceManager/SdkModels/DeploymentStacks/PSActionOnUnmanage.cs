@@ -12,16 +12,12 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
-
-namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
+namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks
 {
-    public class TemplateParameterFileParameter
+    public enum PSActionOnUnmanage
     {
-        [JsonProperty("value")]
-        public object Value { get; set; }
-
-        [JsonProperty("reference")]
-        public object Reference { get; set; }
+        DetachAll = 0,
+        DeleteResources,
+        DeleteAll
     }
 }
