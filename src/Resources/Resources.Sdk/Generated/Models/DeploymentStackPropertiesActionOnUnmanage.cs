@@ -15,8 +15,8 @@ namespace Microsoft.Azure.Management.Resources.Models
     using System.Linq;
 
     /// <summary>
-    /// Defines the behavior of resources that are not managed immediately
-    /// after the stack is updated.
+    /// Defines the behavior of resources that are no longer managed after the
+    /// stack is updated or deleted.
     /// </summary>
     public partial class DeploymentStackPropertiesActionOnUnmanage
     {

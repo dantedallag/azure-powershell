@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Management.Resources
     using Newtonsoft.Json;
 
     /// <summary>
-    /// The APIs listed in this specification can be used to manage deployment
+    /// The APIs listed in this specification can be used to manage Deployment
     /// stack resources through the Azure Resource Manager.
     /// </summary>
     public partial interface IDeploymentStacksClient : System.IDisposable
@@ -47,9 +47,9 @@ namespace Microsoft.Azure.Management.Resources
         string ApiVersion { get; }
 
         /// <summary>
-        /// The ID of the target subscription.
+        /// The ID of the target subscription. The value must be an UUID.
         /// </summary>
-        string SubscriptionId { get; set; }
+        System.Guid SubscriptionId { get; set; }
 
         /// <summary>
         /// The preferred language for the response.

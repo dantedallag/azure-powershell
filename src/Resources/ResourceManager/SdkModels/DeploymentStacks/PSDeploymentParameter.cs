@@ -12,16 +12,22 @@
 // limitations under the License.
 // ----------------------------------------------------------------------------------
 
-using Newtonsoft.Json;
+using Microsoft.Azure.Management.Resources.Models;
+using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
+namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks
 {
-    public class TemplateParameterFileParameter
+    public class PSDeploymentParameter
     {
-        [JsonProperty("value")]
-        public object Value { get; set; }
+        public DeploymentVariable parameter;
 
-        [JsonProperty("reference")]
-        public object Reference { get; set; }
+        public KeyVaultParameterReference keyVaultReference;
+
+        public override string ToString()
+        {
+            return "implementing";
+        }
     }
 }

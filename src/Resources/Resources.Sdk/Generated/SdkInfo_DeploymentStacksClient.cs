@@ -19,8 +19,8 @@ namespace Microsoft.Azure.Management.Resources
           {
               return new Tuple<string, string, string>[]
               {
-                new Tuple<string, string, string>("Management", "DeploymentStacks", "2022-08-01-preview"),
-                new Tuple<string, string, string>("Resources", "DeploymentStacks", "2022-08-01-preview"),
+                new Tuple<string, string, string>("Management", "DeploymentStacks", "2024-03-01"),
+                new Tuple<string, string, string>("Resources", "DeploymentStacks", "2024-03-01"),
               }.AsEnumerable();
           }
       }

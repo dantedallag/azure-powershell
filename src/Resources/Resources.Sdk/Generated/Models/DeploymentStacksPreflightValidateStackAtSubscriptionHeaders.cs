@@ -14,26 +14,26 @@ namespace Microsoft.Azure.Management.Resources.Models
     using System.Linq;
 
     /// <summary>
-    /// The resourceId model.
+    /// Defines headers for PreflightValidateStackAtSubscription operation.
     /// </summary>
-    public partial class ResourceReference
+    public partial class DeploymentStacksPreflightValidateStackAtSubscriptionHeaders
     {
         /// <summary>
-        /// Initializes a new instance of the ResourceReference class.
+        /// Initializes a new instance of the
+        /// DeploymentStacksPreflightValidateStackAtSubscriptionHeaders class.
         /// </summary>
-        public ResourceReference()
+        public DeploymentStacksPreflightValidateStackAtSubscriptionHeaders()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the ResourceReference class.
+        /// Initializes a new instance of the
+        /// DeploymentStacksPreflightValidateStackAtSubscriptionHeaders class.
         /// </summary>
-        /// <param name="id">The resourceId of a resource managed by the
-        /// deployment stack.</param>
-        public ResourceReference(string id = default(string))
+        public DeploymentStacksPreflightValidateStackAtSubscriptionHeaders(string location = default(string))
         {
-            Id = id;
+            Location = location;
             CustomInit();
         }
 
@@ -43,10 +43,9 @@ namespace Microsoft.Azure.Management.Resources.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets the resourceId of a resource managed by the deployment stack.
         /// </summary>
-        [JsonProperty(PropertyName = "id")]
-        public string Id { get; private set; }
+        [JsonProperty(PropertyName = "Location")]
+        public string Location { get; set; }
 
     }
 }

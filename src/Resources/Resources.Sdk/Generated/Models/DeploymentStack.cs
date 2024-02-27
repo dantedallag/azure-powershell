@@ -35,8 +35,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// Initializes a new instance of the DeploymentStack class.
         /// </summary>
         /// <param name="actionOnUnmanage">Defines the behavior of resources
-        /// that are not managed immediately after the stack is
-        /// updated.</param>
+        /// that are no longer managed after the stack is updated or
+        /// deleted.</param>
         /// <param name="denySettings">Defines how resources deployed by the
         /// stack are locked.</param>
         /// <param name="id">String Id used to locate any resource on
@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// <param name="type">Type of this resource.</param>
         /// <param name="systemData">Azure Resource Manager metadata containing
         /// createdBy and modifiedBy information.</param>
-        /// <param name="location">The location of the deployment stack. It
+        /// <param name="location">The location of the Deployment stack. It
         /// cannot be changed after creation. It must be one of the supported
         /// Azure locations.</param>
         /// <param name="tags">Deployment stack resource tags.</param>
@@ -61,8 +61,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// deployment parameters for the template. Use this element when
         /// providing the parameter values directly in the request, rather than
         /// linking to an existing parameter file. Use either the
-        /// parametersLink property or the parameters property, but not both.
-        /// It can be a JObject or a well formed JSON string.</param>
+        /// parametersLink property or the parameters property, but not
+        /// both.</param>
         /// <param name="parametersLink">The URI of parameters file. Use this
         /// element to link to an existing parameters file. Use either the
         /// parametersLink property or the parameters property, but not
@@ -77,26 +77,36 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// subscription (format: '/subscriptions/{subscriptionId}'), resource
         /// group (format:
         /// '/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}').</param>
-        /// <param name="description">Deployment stack description.</param>
+        /// <param name="description">Deployment stack description. Max length
+        /// of 4096 characters.</param>
         /// <param name="provisioningState">State of the deployment stack.
-        /// Possible values include: 'Creating', 'Validating', 'Waiting',
-        /// 'Deploying', 'Canceling', 'Locking', 'DeletingResources',
-        /// 'Succeeded', 'Failed', 'Canceled', 'Deleting'</param>
+        /// Possible values include: 'creating', 'validating', 'waiting',
+        /// 'deploying', 'canceling', 'locking', 'deletingResources',
+        /// 'succeeded', 'failed', 'canceled', 'deleting'</param>
+        /// <param name="correlationId">The correlation id of the last stack
+        /// upsert or delete operation. It is in GUID format and is used for
+        /// tracing.</param>
         /// <param name="detachedResources">An array of resources that were
-        /// detached during the most recent update.</param>
+        /// detached during the most recent Deployment stack update. Detached
+        /// means that the resource was removed from the template, but no
+        /// relevant deletion operations were specified. So, the resource still
+        /// exists while no longer being associated with the stack.</param>
         /// <param name="deletedResources">An array of resources that were
-        /// deleted during the most recent update.</param>
+        /// deleted during the most recent Deployment stack update. Deleted
+        /// means that the resource was removed from the template and relevant
+        /// deletion operations were specified.</param>
         /// <param name="failedResources">An array of resources that failed to
-        /// reach goal state during the most recent update.</param>
+        /// reach goal state during the most recent update. Each resourceId is
+        /// accompanied by an error message.</param>
         /// <param name="resourcesProperty">An array of resources currently
         /// managed by the deployment stack.</param>
         /// <param name="deploymentId">The resourceId of the deployment
         /// resource created by the deployment stack.</param>
-        /// <param name="outputs">The outputs of the underlying
-        /// deployment.</param>
-        /// <param name="duration">The duration of the deployment stack
-        /// update.</param>
-        public DeploymentStack(DeploymentStackPropertiesActionOnUnmanage actionOnUnmanage, DenySettings denySettings, string id = default(string), string name = default(string), string type = default(string), SystemData systemData = default(SystemData), string location = default(string), IDictionary<string, string> tags = default(IDictionary<string, string>), ErrorResponse error = default(ErrorResponse), object template = default(object), DeploymentStacksTemplateLink templateLink = default(DeploymentStacksTemplateLink), object parameters = default(object), DeploymentStacksParametersLink parametersLink = default(DeploymentStacksParametersLink), DeploymentStacksDebugSetting debugSetting = default(DeploymentStacksDebugSetting), string deploymentScope = default(string), string description = default(string), string provisioningState = default(string), IList<ResourceReference> detachedResources = default(IList<ResourceReference>), IList<ResourceReference> deletedResources = default(IList<ResourceReference>), IList<ResourceReferenceExtended> failedResources = default(IList<ResourceReferenceExtended>), IList<ManagedResourceReference> resourcesProperty = default(IList<ManagedResourceReference>), string deploymentId = default(string), object outputs = default(object), string duration = default(string))
+        /// <param name="outputs">The outputs of the deployment resource
+        /// created by the deployment stack.</param>
+        /// <param name="duration">The duration of the last successful
+        /// Deployment stack update.</param>
+        public DeploymentStack(DeploymentStackPropertiesActionOnUnmanage actionOnUnmanage, DenySettings denySettings, string id = default(string), string name = default(string), string type = default(string), SystemData systemData = default(SystemData), string location = default(string), IDictionary<string, string> tags = default(IDictionary<string, string>), ErrorResponse error = default(ErrorResponse), object template = default(object), DeploymentStacksTemplateLink templateLink = default(DeploymentStacksTemplateLink), IDictionary<string, DeploymentParameter> parameters = default(IDictionary<string, DeploymentParameter>), DeploymentStacksParametersLink parametersLink = default(DeploymentStacksParametersLink), DeploymentStacksDebugSetting debugSetting = default(DeploymentStacksDebugSetting), string deploymentScope = default(string), string description = default(string), string provisioningState = default(string), string correlationId = default(string), IList<ResourceReference> detachedResources = default(IList<ResourceReference>), IList<ResourceReference> deletedResources = default(IList<ResourceReference>), IList<ResourceReferenceExtended> failedResources = default(IList<ResourceReferenceExtended>), IList<ManagedResourceReference> resourcesProperty = default(IList<ManagedResourceReference>), string deploymentId = default(string), object outputs = default(object), string duration = default(string))
             : base(id, name, type, systemData)
         {
             Location = location;
@@ -112,6 +122,7 @@ namespace Microsoft.Azure.Management.Resources.Models
             Description = description;
             DenySettings = denySettings;
             ProvisioningState = provisioningState;
+            CorrelationId = correlationId;
             DetachedResources = detachedResources;
             DeletedResources = deletedResources;
             FailedResources = failedResources;
@@ -128,7 +139,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets the location of the deployment stack. It cannot be
+        /// Gets or sets the location of the Deployment stack. It cannot be
         /// changed after creation. It must be one of the supported Azure
         /// locations.
         /// </summary>
@@ -168,11 +179,10 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// parameters for the template. Use this element when providing the
         /// parameter values directly in the request, rather than linking to an
         /// existing parameter file. Use either the parametersLink property or
-        /// the parameters property, but not both. It can be a JObject or a
-        /// well formed JSON string.
+        /// the parameters property, but not both.
         /// </summary>
         [JsonProperty(PropertyName = "properties.parameters")]
-        public object Parameters { get; set; }
+        public IDictionary<string, DeploymentParameter> Parameters { get; set; }
 
         /// <summary>
         /// Gets or sets the URI of parameters file. Use this element to link
@@ -183,8 +193,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         public DeploymentStacksParametersLink ParametersLink { get; set; }
 
         /// <summary>
-        /// Gets or sets defines the behavior of resources that are not managed
-        /// immediately after the stack is updated.
+        /// Gets or sets defines the behavior of resources that are no longer
+        /// managed after the stack is updated or deleted.
         /// </summary>
         [JsonProperty(PropertyName = "properties.actionOnUnmanage")]
         public DeploymentStackPropertiesActionOnUnmanage ActionOnUnmanage { get; set; }
@@ -209,7 +219,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         public string DeploymentScope { get; set; }
 
         /// <summary>
-        /// Gets or sets deployment stack description.
+        /// Gets or sets deployment stack description. Max length of 4096
+        /// characters.
         /// </summary>
         [JsonProperty(PropertyName = "properties.description")]
         public string Description { get; set; }
@@ -223,30 +234,43 @@ namespace Microsoft.Azure.Management.Resources.Models
 
         /// <summary>
         /// Gets state of the deployment stack. Possible values include:
-        /// 'Creating', 'Validating', 'Waiting', 'Deploying', 'Canceling',
-        /// 'Locking', 'DeletingResources', 'Succeeded', 'Failed', 'Canceled',
-        /// 'Deleting'
+        /// 'creating', 'validating', 'waiting', 'deploying', 'canceling',
+        /// 'locking', 'deletingResources', 'succeeded', 'failed', 'canceled',
+        /// 'deleting'
         /// </summary>
         [JsonProperty(PropertyName = "properties.provisioningState")]
         public string ProvisioningState { get; private set; }
 
         /// <summary>
+        /// Gets the correlation id of the last stack upsert or delete
+        /// operation. It is in GUID format and is used for tracing.
+        /// </summary>
+        [JsonProperty(PropertyName = "properties.correlationId")]
+        public string CorrelationId { get; private set; }
+
+        /// <summary>
         /// Gets an array of resources that were detached during the most
-        /// recent update.
+        /// recent Deployment stack update. Detached means that the resource
+        /// was removed from the template, but no relevant deletion operations
+        /// were specified. So, the resource still exists while no longer being
+        /// associated with the stack.
         /// </summary>
         [JsonProperty(PropertyName = "properties.detachedResources")]
         public IList<ResourceReference> DetachedResources { get; private set; }
 
         /// <summary>
         /// Gets an array of resources that were deleted during the most recent
-        /// update.
+        /// Deployment stack update. Deleted means that the resource was
+        /// removed from the template and relevant deletion operations were
+        /// specified.
         /// </summary>
         [JsonProperty(PropertyName = "properties.deletedResources")]
         public IList<ResourceReference> DeletedResources { get; private set; }
 
         /// <summary>
         /// Gets an array of resources that failed to reach goal state during
-        /// the most recent update.
+        /// the most recent update. Each resourceId is accompanied by an error
+        /// message.
         /// </summary>
         [JsonProperty(PropertyName = "properties.failedResources")]
         public IList<ResourceReferenceExtended> FailedResources { get; private set; }
@@ -266,13 +290,14 @@ namespace Microsoft.Azure.Management.Resources.Models
         public string DeploymentId { get; private set; }
 
         /// <summary>
-        /// Gets the outputs of the underlying deployment.
+        /// Gets the outputs of the deployment resource created by the
+        /// deployment stack.
         /// </summary>
         [JsonProperty(PropertyName = "properties.outputs")]
         public object Outputs { get; private set; }
 
         /// <summary>
-        /// Gets the duration of the deployment stack update.
+        /// Gets the duration of the last successful Deployment stack update.
         /// </summary>
         [JsonProperty(PropertyName = "properties.duration")]
         public string Duration { get; private set; }
@@ -292,6 +317,16 @@ namespace Microsoft.Azure.Management.Resources.Models
             if (DenySettings == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "DenySettings");
+            }
+            if (Parameters != null)
+            {
+                foreach (var valueElement in Parameters.Values)
+                {
+                    if (valueElement != null)
+                    {
+                        valueElement.Validate();
+                    }
+                }
             }
             if (ParametersLink != null)
             {

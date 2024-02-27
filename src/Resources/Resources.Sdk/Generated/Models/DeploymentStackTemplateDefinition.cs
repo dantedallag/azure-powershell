@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Management.Resources.Models
     using System.Linq;
 
     /// <summary>
-    /// Export Template specific properties of the Stack.
+    /// Export Template specific properties of the Deployment stack.
     /// </summary>
     public partial class DeploymentStackTemplateDefinition
     {

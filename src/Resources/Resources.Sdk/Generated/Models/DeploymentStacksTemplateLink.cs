@@ -33,14 +33,14 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// </summary>
         /// <param name="uri">The URI of the template to deploy. Use either the
         /// uri or id property, but not both.</param>
-        /// <param name="id">The resource id of a Template Spec. Use either the
+        /// <param name="id">The resourceId of a Template Spec. Use either the
         /// id or uri property, but not both.</param>
         /// <param name="relativePath">The relativePath property can be used to
         /// deploy a linked template at a location relative to the parent. If
         /// the parent template was linked with a TemplateSpec, this will
         /// reference an artifact in the TemplateSpec.  If the parent was
         /// linked with a URI, the child deployment will be a combination of
-        /// the parent and relativePath URIs</param>
+        /// the parent and relativePath URIs.</param>
         /// <param name="queryString">The query string (for example, a SAS
         /// token) to be used with the templateLink URI.</param>
         /// <param name="contentVersion">If included, must match the
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         public string Uri { get; set; }
 
         /// <summary>
-        /// Gets or sets the resource id of a Template Spec. Use either the id
+        /// Gets or sets the resourceId of a Template Spec. Use either the id
         /// or uri property, but not both.
         /// </summary>
         [JsonProperty(PropertyName = "id")]
@@ -80,7 +80,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// template was linked with a TemplateSpec, this will reference an
         /// artifact in the TemplateSpec.  If the parent was linked with a URI,
         /// the child deployment will be a combination of the parent and
-        /// relativePath URIs
+        /// relativePath URIs.
         /// </summary>
         [JsonProperty(PropertyName = "relativePath")]
         public string RelativePath { get; set; }

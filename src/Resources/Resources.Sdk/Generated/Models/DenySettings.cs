@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Management.Resources.Models
     using System.Linq;
 
     /// <summary>
-    /// Defines how resources deployed by the deployment stack are locked.
+    /// Defines how resources deployed by the Deployment stack are locked.
     /// </summary>
     public partial class DenySettings
     {
@@ -32,8 +32,9 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// <summary>
         /// Initializes a new instance of the DenySettings class.
         /// </summary>
-        /// <param name="mode">denySettings Mode. Possible values include:
-        /// 'denyDelete', 'denyWriteAndDelete', 'none'</param>
+        /// <param name="mode">denySettings Mode that defines denied actions.
+        /// Possible values include: 'denyDelete', 'denyWriteAndDelete',
+        /// 'none'</param>
         /// <param name="excludedPrincipals">List of AAD principal IDs excluded
         /// from the lock. Up to 5 principals are permitted.</param>
         /// <param name="excludedActions">List of role-based management
@@ -47,7 +48,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// 'Microsoft.Authorization/locks/delete'. Duplicate actions will be
         /// removed.</param>
         /// <param name="applyToChildScopes">DenySettings will be applied to
-        /// child scopes.</param>
+        /// child resource scopes of every managed resource with a deny
+        /// assignment.</param>
         public DenySettings(string mode, IList<string> excludedPrincipals = default(IList<string>), IList<string> excludedActions = default(IList<string>), bool? applyToChildScopes = default(bool?))
         {
             Mode = mode;
@@ -63,8 +65,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets or sets denySettings Mode. Possible values include:
-        /// 'denyDelete', 'denyWriteAndDelete', 'none'
+        /// Gets or sets denySettings Mode that defines denied actions.
+        /// Possible values include: 'denyDelete', 'denyWriteAndDelete', 'none'
         /// </summary>
         [JsonProperty(PropertyName = "mode")]
         public string Mode { get; set; }
@@ -91,7 +93,8 @@ namespace Microsoft.Azure.Management.Resources.Models
         public IList<string> ExcludedActions { get; set; }
 
         /// <summary>
-        /// Gets or sets denySettings will be applied to child scopes.
+        /// Gets or sets denySettings will be applied to child resource scopes
+        /// of every managed resource with a deny assignment.
         /// </summary>
         [JsonProperty(PropertyName = "applyToChildScopes")]
         public bool? ApplyToChildScopes { get; set; }

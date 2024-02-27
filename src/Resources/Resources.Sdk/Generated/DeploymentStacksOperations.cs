@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Management.Resources
         public DeploymentStacksClient Client { get; private set; }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified resource group.
+        /// Lists all the Deployment stacks within the specified Resource Group.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -79,17 +79,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (resourceGroupName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
@@ -130,7 +119,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
             List<string> _queryParameters = new List<string>();
             if (Client.ApiVersion != null)
@@ -258,7 +247,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified subscription.
+        /// Lists all the Deployment stacks within the specified Subscription.
         /// </summary>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -283,17 +272,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtSubscriptionWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (Client.ApiVersion == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.ApiVersion");
@@ -318,7 +296,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             List<string> _queryParameters = new List<string>();
             if (Client.ApiVersion != null)
             {
@@ -445,10 +423,10 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified management group.
+        /// Lists all the Deployment stacks within the specified Management Group.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -644,7 +622,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Resource Group scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -653,7 +631,7 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -669,7 +647,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Resource Group scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -700,17 +678,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStack>> GetAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (resourceGroupName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
@@ -771,7 +738,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
@@ -900,8 +867,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Resource Group scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -910,11 +877,15 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
+        /// Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -923,21 +894,21 @@ namespace Microsoft.Azure.Management.Resources
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> DeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> DeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Send request
-            AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders> _response = await BeginDeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, deploymentStackName, unmanageActionResources, unmanageActionResourceGroups, customHeaders, cancellationToken).ConfigureAwait(false);
+            AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders> _response = await BeginDeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, deploymentStackName, unmanageActionResources, unmanageActionResourceGroups, unmanageActionManagementGroups, customHeaders, cancellationToken).ConfigureAwait(false);
             return await Client.GetPostOrDeleteOperationResultAsync(_response, customHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -953,7 +924,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -981,17 +952,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStack>> GetAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (deploymentStackName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
@@ -1036,7 +996,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
             if (Client.ApiVersion != null)
@@ -1164,18 +1124,22 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Subscription scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
+        /// Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -1184,24 +1148,24 @@ namespace Microsoft.Azure.Management.Resources
         /// <param name='cancellationToken'>
         /// The cancellation token.
         /// </param>
-        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> DeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> DeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
             // Send request
-            AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders> _response = await BeginDeleteAtSubscriptionWithHttpMessagesAsync(deploymentStackName, unmanageActionResources, unmanageActionResourceGroups, customHeaders, cancellationToken).ConfigureAwait(false);
+            AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders> _response = await BeginDeleteAtSubscriptionWithHttpMessagesAsync(deploymentStackName, unmanageActionResources, unmanageActionResourceGroups, unmanageActionManagementGroups, customHeaders, cancellationToken).ConfigureAwait(false);
             return await Client.GetPostOrDeleteOperationResultAsync(_response, customHeaders, cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -1217,10 +1181,10 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -1440,25 +1404,25 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Management Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionManagementGroups'>
-        /// Flag to indicate delete rather than detach for the management groups.
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -1475,7 +1439,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at Resource Group
+        /// scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -1506,17 +1471,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStackTemplateDefinition>> ExportTemplateAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (resourceGroupName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
@@ -1577,7 +1531,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}/exportTemplate").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
@@ -1706,7 +1660,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at Subscription
+        /// scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -1734,17 +1689,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStackTemplateDefinition>> ExportTemplateAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (deploymentStackName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
@@ -1789,7 +1733,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}/exportTemplate").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
             if (Client.ApiVersion != null)
@@ -1917,10 +1861,11 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at Management
+        /// Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -2140,7 +2085,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Runs preflight validation on the Resource Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -2149,7 +2095,81 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>> PreflightValidateStackAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Send request
+            AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders> _response = await BeginPreflightValidateStackAtResourceGroupWithHttpMessagesAsync(resourceGroupName, deploymentStackName, deploymentStack, customHeaders, cancellationToken).ConfigureAwait(false);
+            return await Client.GetPostOrDeleteOperationResultAsync(_response, customHeaders, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Runs preflight validation on the Subscription scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>> PreflightValidateStackAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Send request
+            AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders> _response = await BeginPreflightValidateStackAtSubscriptionWithHttpMessagesAsync(deploymentStackName, deploymentStack, customHeaders, cancellationToken).ConfigureAwait(false);
+            return await Client.GetPostOrDeleteOperationResultAsync(_response, customHeaders, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Runs preflight validation on the Management Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='managementGroupId'>
+        /// Management Group id.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>> PreflightValidateStackAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            // Send request
+            AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders> _response = await BeginPreflightValidateStackAtManagementGroupWithHttpMessagesAsync(managementGroupId, deploymentStackName, deploymentStack, customHeaders, cancellationToken).ConfigureAwait(false);
+            return await Client.GetPostOrDeleteOperationResultAsync(_response, customHeaders, cancellationToken).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Creates or updates a Deployment stack at Resource Group scope.
+        /// </summary>
+        /// <param name='resourceGroupName'>
+        /// The name of the resource group. The name is case insensitive.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -2174,17 +2194,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStack>> BeginCreateOrUpdateAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (resourceGroupName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
@@ -2254,7 +2263,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
@@ -2407,8 +2416,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Resource Group scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -2417,11 +2426,15 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
+        /// Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -2442,19 +2455,8 @@ namespace Microsoft.Azure.Management.Resources
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> BeginDeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> BeginDeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (resourceGroupName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
@@ -2511,13 +2513,14 @@ namespace Microsoft.Azure.Management.Resources
                 tracingParameters.Add("deploymentStackName", deploymentStackName);
                 tracingParameters.Add("unmanageActionResources", unmanageActionResources);
                 tracingParameters.Add("unmanageActionResourceGroups", unmanageActionResourceGroups);
+                tracingParameters.Add("unmanageActionManagementGroups", unmanageActionManagementGroups);
                 tracingParameters.Add("cancellationToken", cancellationToken);
                 ServiceClientTracing.Enter(_invocationId, this, "BeginDeleteAtResourceGroup", tracingParameters);
             }
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
@@ -2528,6 +2531,10 @@ namespace Microsoft.Azure.Management.Resources
             if (unmanageActionResourceGroups != null)
             {
                 _queryParameters.Add(string.Format("unmanageAction.ResourceGroups={0}", System.Uri.EscapeDataString(unmanageActionResourceGroups)));
+            }
+            if (unmanageActionManagementGroups != null)
+            {
+                _queryParameters.Add(string.Format("unmanageAction.ManagementGroups={0}", System.Uri.EscapeDataString(unmanageActionManagementGroups)));
             }
             if (Client.ApiVersion != null)
             {
@@ -2649,13 +2656,13 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -2680,17 +2687,6 @@ namespace Microsoft.Azure.Management.Resources
         /// </return>
         public async Task<AzureOperationResponse<DeploymentStack>> BeginCreateOrUpdateAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (deploymentStackName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
@@ -2744,7 +2740,7 @@ namespace Microsoft.Azure.Management.Resources
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
             if (Client.ApiVersion != null)
@@ -2896,18 +2892,22 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Subscription scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
+        /// Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -2928,19 +2928,8 @@ namespace Microsoft.Azure.Management.Resources
         /// <return>
         /// A response object containing the response body and response headers.
         /// </return>
-        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> BeginDeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> BeginDeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            if (Client.SubscriptionId == null)
-            {
-                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.SubscriptionId");
-            }
-            if (Client.SubscriptionId != null)
-            {
-                if (Client.SubscriptionId.Length < 1)
-                {
-                    throw new ValidationException(ValidationRules.MinLength, "Client.SubscriptionId", 1);
-                }
-            }
             if (deploymentStackName == null)
             {
                 throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
@@ -2981,13 +2970,14 @@ namespace Microsoft.Azure.Management.Resources
                 tracingParameters.Add("deploymentStackName", deploymentStackName);
                 tracingParameters.Add("unmanageActionResources", unmanageActionResources);
                 tracingParameters.Add("unmanageActionResourceGroups", unmanageActionResourceGroups);
+                tracingParameters.Add("unmanageActionManagementGroups", unmanageActionManagementGroups);
                 tracingParameters.Add("cancellationToken", cancellationToken);
                 ServiceClientTracing.Enter(_invocationId, this, "BeginDeleteAtSubscription", tracingParameters);
             }
             // Construct URL
             var _baseUrl = Client.BaseUri.AbsoluteUri;
             var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}").ToString();
-            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Client.SubscriptionId));
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
             _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
             List<string> _queryParameters = new List<string>();
             if (unmanageActionResources != null)
@@ -2997,6 +2987,10 @@ namespace Microsoft.Azure.Management.Resources
             if (unmanageActionResourceGroups != null)
             {
                 _queryParameters.Add(string.Format("unmanageAction.ResourceGroups={0}", System.Uri.EscapeDataString(unmanageActionResourceGroups)));
+            }
+            if (unmanageActionManagementGroups != null)
+            {
+                _queryParameters.Add(string.Format("unmanageAction.ManagementGroups={0}", System.Uri.EscapeDataString(unmanageActionManagementGroups)));
             }
             if (Client.ApiVersion != null)
             {
@@ -3118,16 +3112,16 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// Headers that will be added to request.
@@ -3377,25 +3371,25 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes, status code
-        /// 200 returned without content.
+        /// Deletes a Deployment stack by name at Management Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources. Possible
-        /// values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resources.
+        /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
+        /// Flag to indicate delete rather than detach for unmanaged resource groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionManagementGroups'>
-        /// Flag to indicate delete rather than detach for the management groups.
+        /// Flag to indicate delete rather than detach for unmanaged management groups.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -3620,7 +3614,683 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified resource group.
+        /// Runs preflight validation on the Resource Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='resourceGroupName'>
+        /// The name of the resource group. The name is case insensitive.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// Headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <return>
+        /// A response object containing the response body and response headers.
+        /// </return>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>> BeginPreflightValidateStackAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (resourceGroupName == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "resourceGroupName");
+            }
+            if (resourceGroupName != null)
+            {
+                if (resourceGroupName.Length > 90)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "resourceGroupName", 90);
+                }
+                if (resourceGroupName.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "resourceGroupName", 1);
+                }
+            }
+            if (deploymentStackName == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
+            }
+            if (deploymentStackName != null)
+            {
+                if (deploymentStackName.Length > 90)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "deploymentStackName", 90);
+                }
+                if (deploymentStackName.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "deploymentStackName", 1);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(deploymentStackName, "^[-\\w\\._\\(\\)]+$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "deploymentStackName", "^[-\\w\\._\\(\\)]+$");
+                }
+            }
+            if (Client.ApiVersion == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.ApiVersion");
+            }
+            if (Client.ApiVersion != null)
+            {
+                if (Client.ApiVersion.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "Client.ApiVersion", 1);
+                }
+            }
+            if (deploymentStack == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStack");
+            }
+            if (deploymentStack != null)
+            {
+                deploymentStack.Validate();
+            }
+            // Tracing
+            bool _shouldTrace = ServiceClientTracing.IsEnabled;
+            string _invocationId = null;
+            if (_shouldTrace)
+            {
+                _invocationId = ServiceClientTracing.NextInvocationId.ToString();
+                Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
+                tracingParameters.Add("resourceGroupName", resourceGroupName);
+                tracingParameters.Add("deploymentStackName", deploymentStackName);
+                tracingParameters.Add("deploymentStack", deploymentStack);
+                tracingParameters.Add("cancellationToken", cancellationToken);
+                ServiceClientTracing.Enter(_invocationId, this, "BeginPreflightValidateStackAtResourceGroup", tracingParameters);
+            }
+            // Construct URL
+            var _baseUrl = Client.BaseUri.AbsoluteUri;
+            var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}/validate").ToString();
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
+            _url = _url.Replace("{resourceGroupName}", System.Uri.EscapeDataString(resourceGroupName));
+            _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
+            List<string> _queryParameters = new List<string>();
+            if (Client.ApiVersion != null)
+            {
+                _queryParameters.Add(string.Format("api-version={0}", System.Uri.EscapeDataString(Client.ApiVersion)));
+            }
+            if (_queryParameters.Count > 0)
+            {
+                _url += (_url.Contains("?") ? "&" : "?") + string.Join("&", _queryParameters);
+            }
+            // Create HTTP transport objects
+            var _httpRequest = new HttpRequestMessage();
+            HttpResponseMessage _httpResponse = null;
+            _httpRequest.Method = new HttpMethod("POST");
+            _httpRequest.RequestUri = new System.Uri(_url);
+            // Set Headers
+            if (Client.GenerateClientRequestId != null && Client.GenerateClientRequestId.Value)
+            {
+                _httpRequest.Headers.TryAddWithoutValidation("x-ms-client-request-id", System.Guid.NewGuid().ToString());
+            }
+            if (Client.AcceptLanguage != null)
+            {
+                if (_httpRequest.Headers.Contains("accept-language"))
+                {
+                    _httpRequest.Headers.Remove("accept-language");
+                }
+                _httpRequest.Headers.TryAddWithoutValidation("accept-language", Client.AcceptLanguage);
+            }
+
+
+            if (customHeaders != null)
+            {
+                foreach(var _header in customHeaders)
+                {
+                    if (_httpRequest.Headers.Contains(_header.Key))
+                    {
+                        _httpRequest.Headers.Remove(_header.Key);
+                    }
+                    _httpRequest.Headers.TryAddWithoutValidation(_header.Key, _header.Value);
+                }
+            }
+
+            // Serialize Request
+            string _requestContent = null;
+            if(deploymentStack != null)
+            {
+                _requestContent = Rest.Serialization.SafeJsonConvert.SerializeObject(deploymentStack, Client.SerializationSettings);
+                _httpRequest.Content = new StringContent(_requestContent, System.Text.Encoding.UTF8);
+                _httpRequest.Content.Headers.ContentType =System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json; charset=utf-8");
+            }
+            // Set Credentials
+            if (Client.Credentials != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Client.Credentials.ProcessHttpRequestAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            }
+            // Send Request
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.SendRequest(_invocationId, _httpRequest);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            _httpResponse = await Client.HttpClient.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.ReceiveResponse(_invocationId, _httpResponse);
+            }
+            HttpStatusCode _statusCode = _httpResponse.StatusCode;
+            cancellationToken.ThrowIfCancellationRequested();
+            string _responseContent = null;
+            if ((int)_statusCode != 202)
+            {
+                var ex = new DeploymentStacksErrorException(string.Format("Operation returned an invalid status code '{0}'", _statusCode));
+                try
+                {
+                    _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    DeploymentStacksError _errorBody =  Rest.Serialization.SafeJsonConvert.DeserializeObject<DeploymentStacksError>(_responseContent, Client.DeserializationSettings);
+                    if (_errorBody != null)
+                    {
+                        ex.Body = _errorBody;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Ignore the exception
+                }
+                ex.Request = new HttpRequestMessageWrapper(_httpRequest, _requestContent);
+                ex.Response = new HttpResponseMessageWrapper(_httpResponse, _responseContent);
+                if (_shouldTrace)
+                {
+                    ServiceClientTracing.Error(_invocationId, ex);
+                }
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw ex;
+            }
+            // Create Result
+            var _result = new AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>();
+            _result.Request = _httpRequest;
+            _result.Response = _httpResponse;
+            if (_httpResponse.Headers.Contains("x-ms-request-id"))
+            {
+                _result.RequestId = _httpResponse.Headers.GetValues("x-ms-request-id").FirstOrDefault();
+            }
+            try
+            {
+                _result.Headers = _httpResponse.GetHeadersAsJson().ToObject<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>(JsonSerializer.Create(Client.DeserializationSettings));
+            }
+            catch (JsonException ex)
+            {
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw new SerializationException("Unable to deserialize the headers.", _httpResponse.GetHeadersAsJson().ToString(), ex);
+            }
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.Exit(_invocationId, _result);
+            }
+            return _result;
+        }
+
+        /// <summary>
+        /// Runs preflight validation on the Subscription scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// Headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <return>
+        /// A response object containing the response body and response headers.
+        /// </return>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>> BeginPreflightValidateStackAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (deploymentStackName == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
+            }
+            if (deploymentStackName != null)
+            {
+                if (deploymentStackName.Length > 90)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "deploymentStackName", 90);
+                }
+                if (deploymentStackName.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "deploymentStackName", 1);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(deploymentStackName, "^[-\\w\\._\\(\\)]+$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "deploymentStackName", "^[-\\w\\._\\(\\)]+$");
+                }
+            }
+            if (Client.ApiVersion == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.ApiVersion");
+            }
+            if (Client.ApiVersion != null)
+            {
+                if (Client.ApiVersion.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "Client.ApiVersion", 1);
+                }
+            }
+            if (deploymentStack == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStack");
+            }
+            if (deploymentStack != null)
+            {
+                deploymentStack.Validate();
+            }
+            // Tracing
+            bool _shouldTrace = ServiceClientTracing.IsEnabled;
+            string _invocationId = null;
+            if (_shouldTrace)
+            {
+                _invocationId = ServiceClientTracing.NextInvocationId.ToString();
+                Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
+                tracingParameters.Add("deploymentStackName", deploymentStackName);
+                tracingParameters.Add("deploymentStack", deploymentStack);
+                tracingParameters.Add("cancellationToken", cancellationToken);
+                ServiceClientTracing.Enter(_invocationId, this, "BeginPreflightValidateStackAtSubscription", tracingParameters);
+            }
+            // Construct URL
+            var _baseUrl = Client.BaseUri.AbsoluteUri;
+            var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "subscriptions/{subscriptionId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}/validate").ToString();
+            _url = _url.Replace("{subscriptionId}", System.Uri.EscapeDataString(Rest.Serialization.SafeJsonConvert.SerializeObject(Client.SubscriptionId, Client.SerializationSettings).Trim('"')));
+            _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
+            List<string> _queryParameters = new List<string>();
+            if (Client.ApiVersion != null)
+            {
+                _queryParameters.Add(string.Format("api-version={0}", System.Uri.EscapeDataString(Client.ApiVersion)));
+            }
+            if (_queryParameters.Count > 0)
+            {
+                _url += (_url.Contains("?") ? "&" : "?") + string.Join("&", _queryParameters);
+            }
+            // Create HTTP transport objects
+            var _httpRequest = new HttpRequestMessage();
+            HttpResponseMessage _httpResponse = null;
+            _httpRequest.Method = new HttpMethod("POST");
+            _httpRequest.RequestUri = new System.Uri(_url);
+            // Set Headers
+            if (Client.GenerateClientRequestId != null && Client.GenerateClientRequestId.Value)
+            {
+                _httpRequest.Headers.TryAddWithoutValidation("x-ms-client-request-id", System.Guid.NewGuid().ToString());
+            }
+            if (Client.AcceptLanguage != null)
+            {
+                if (_httpRequest.Headers.Contains("accept-language"))
+                {
+                    _httpRequest.Headers.Remove("accept-language");
+                }
+                _httpRequest.Headers.TryAddWithoutValidation("accept-language", Client.AcceptLanguage);
+            }
+
+
+            if (customHeaders != null)
+            {
+                foreach(var _header in customHeaders)
+                {
+                    if (_httpRequest.Headers.Contains(_header.Key))
+                    {
+                        _httpRequest.Headers.Remove(_header.Key);
+                    }
+                    _httpRequest.Headers.TryAddWithoutValidation(_header.Key, _header.Value);
+                }
+            }
+
+            // Serialize Request
+            string _requestContent = null;
+            if(deploymentStack != null)
+            {
+                _requestContent = Rest.Serialization.SafeJsonConvert.SerializeObject(deploymentStack, Client.SerializationSettings);
+                _httpRequest.Content = new StringContent(_requestContent, System.Text.Encoding.UTF8);
+                _httpRequest.Content.Headers.ContentType =System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json; charset=utf-8");
+            }
+            // Set Credentials
+            if (Client.Credentials != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Client.Credentials.ProcessHttpRequestAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            }
+            // Send Request
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.SendRequest(_invocationId, _httpRequest);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            _httpResponse = await Client.HttpClient.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.ReceiveResponse(_invocationId, _httpResponse);
+            }
+            HttpStatusCode _statusCode = _httpResponse.StatusCode;
+            cancellationToken.ThrowIfCancellationRequested();
+            string _responseContent = null;
+            if ((int)_statusCode != 202)
+            {
+                var ex = new DeploymentStacksErrorException(string.Format("Operation returned an invalid status code '{0}'", _statusCode));
+                try
+                {
+                    _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    DeploymentStacksError _errorBody =  Rest.Serialization.SafeJsonConvert.DeserializeObject<DeploymentStacksError>(_responseContent, Client.DeserializationSettings);
+                    if (_errorBody != null)
+                    {
+                        ex.Body = _errorBody;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Ignore the exception
+                }
+                ex.Request = new HttpRequestMessageWrapper(_httpRequest, _requestContent);
+                ex.Response = new HttpResponseMessageWrapper(_httpResponse, _responseContent);
+                if (_shouldTrace)
+                {
+                    ServiceClientTracing.Error(_invocationId, ex);
+                }
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw ex;
+            }
+            // Create Result
+            var _result = new AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>();
+            _result.Request = _httpRequest;
+            _result.Response = _httpResponse;
+            if (_httpResponse.Headers.Contains("x-ms-request-id"))
+            {
+                _result.RequestId = _httpResponse.Headers.GetValues("x-ms-request-id").FirstOrDefault();
+            }
+            try
+            {
+                _result.Headers = _httpResponse.GetHeadersAsJson().ToObject<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>(JsonSerializer.Create(Client.DeserializationSettings));
+            }
+            catch (JsonException ex)
+            {
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw new SerializationException("Unable to deserialize the headers.", _httpResponse.GetHeadersAsJson().ToString(), ex);
+            }
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.Exit(_invocationId, _result);
+            }
+            return _result;
+        }
+
+        /// <summary>
+        /// Runs preflight validation on the Management Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='managementGroupId'>
+        /// Management Group id.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// Headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <exception cref="System.ArgumentNullException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        /// <return>
+        /// A response object containing the response body and response headers.
+        /// </return>
+        public async Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>> BeginPreflightValidateStackAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            if (managementGroupId == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "managementGroupId");
+            }
+            if (managementGroupId != null)
+            {
+                if (managementGroupId.Length > 90)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "managementGroupId", 90);
+                }
+                if (managementGroupId.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "managementGroupId", 1);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(managementGroupId, "^[-\\w\\._\\(\\)]+$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "managementGroupId", "^[-\\w\\._\\(\\)]+$");
+                }
+            }
+            if (deploymentStackName == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStackName");
+            }
+            if (deploymentStackName != null)
+            {
+                if (deploymentStackName.Length > 90)
+                {
+                    throw new ValidationException(ValidationRules.MaxLength, "deploymentStackName", 90);
+                }
+                if (deploymentStackName.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "deploymentStackName", 1);
+                }
+                if (!System.Text.RegularExpressions.Regex.IsMatch(deploymentStackName, "^[-\\w\\._\\(\\)]+$"))
+                {
+                    throw new ValidationException(ValidationRules.Pattern, "deploymentStackName", "^[-\\w\\._\\(\\)]+$");
+                }
+            }
+            if (Client.ApiVersion == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "this.Client.ApiVersion");
+            }
+            if (Client.ApiVersion != null)
+            {
+                if (Client.ApiVersion.Length < 1)
+                {
+                    throw new ValidationException(ValidationRules.MinLength, "Client.ApiVersion", 1);
+                }
+            }
+            if (deploymentStack == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "deploymentStack");
+            }
+            if (deploymentStack != null)
+            {
+                deploymentStack.Validate();
+            }
+            // Tracing
+            bool _shouldTrace = ServiceClientTracing.IsEnabled;
+            string _invocationId = null;
+            if (_shouldTrace)
+            {
+                _invocationId = ServiceClientTracing.NextInvocationId.ToString();
+                Dictionary<string, object> tracingParameters = new Dictionary<string, object>();
+                tracingParameters.Add("managementGroupId", managementGroupId);
+                tracingParameters.Add("deploymentStackName", deploymentStackName);
+                tracingParameters.Add("deploymentStack", deploymentStack);
+                tracingParameters.Add("cancellationToken", cancellationToken);
+                ServiceClientTracing.Enter(_invocationId, this, "BeginPreflightValidateStackAtManagementGroup", tracingParameters);
+            }
+            // Construct URL
+            var _baseUrl = Client.BaseUri.AbsoluteUri;
+            var _url = new System.Uri(new System.Uri(_baseUrl + (_baseUrl.EndsWith("/") ? "" : "/")), "providers/Microsoft.Management/managementGroups/{managementGroupId}/providers/Microsoft.Resources/deploymentStacks/{deploymentStackName}/validate").ToString();
+            _url = _url.Replace("{managementGroupId}", System.Uri.EscapeDataString(managementGroupId));
+            _url = _url.Replace("{deploymentStackName}", System.Uri.EscapeDataString(deploymentStackName));
+            List<string> _queryParameters = new List<string>();
+            if (Client.ApiVersion != null)
+            {
+                _queryParameters.Add(string.Format("api-version={0}", System.Uri.EscapeDataString(Client.ApiVersion)));
+            }
+            if (_queryParameters.Count > 0)
+            {
+                _url += (_url.Contains("?") ? "&" : "?") + string.Join("&", _queryParameters);
+            }
+            // Create HTTP transport objects
+            var _httpRequest = new HttpRequestMessage();
+            HttpResponseMessage _httpResponse = null;
+            _httpRequest.Method = new HttpMethod("POST");
+            _httpRequest.RequestUri = new System.Uri(_url);
+            // Set Headers
+            if (Client.GenerateClientRequestId != null && Client.GenerateClientRequestId.Value)
+            {
+                _httpRequest.Headers.TryAddWithoutValidation("x-ms-client-request-id", System.Guid.NewGuid().ToString());
+            }
+            if (Client.AcceptLanguage != null)
+            {
+                if (_httpRequest.Headers.Contains("accept-language"))
+                {
+                    _httpRequest.Headers.Remove("accept-language");
+                }
+                _httpRequest.Headers.TryAddWithoutValidation("accept-language", Client.AcceptLanguage);
+            }
+
+
+            if (customHeaders != null)
+            {
+                foreach(var _header in customHeaders)
+                {
+                    if (_httpRequest.Headers.Contains(_header.Key))
+                    {
+                        _httpRequest.Headers.Remove(_header.Key);
+                    }
+                    _httpRequest.Headers.TryAddWithoutValidation(_header.Key, _header.Value);
+                }
+            }
+
+            // Serialize Request
+            string _requestContent = null;
+            if(deploymentStack != null)
+            {
+                _requestContent = Rest.Serialization.SafeJsonConvert.SerializeObject(deploymentStack, Client.SerializationSettings);
+                _httpRequest.Content = new StringContent(_requestContent, System.Text.Encoding.UTF8);
+                _httpRequest.Content.Headers.ContentType =System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json; charset=utf-8");
+            }
+            // Set Credentials
+            if (Client.Credentials != null)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                await Client.Credentials.ProcessHttpRequestAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            }
+            // Send Request
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.SendRequest(_invocationId, _httpRequest);
+            }
+            cancellationToken.ThrowIfCancellationRequested();
+            _httpResponse = await Client.HttpClient.SendAsync(_httpRequest, cancellationToken).ConfigureAwait(false);
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.ReceiveResponse(_invocationId, _httpResponse);
+            }
+            HttpStatusCode _statusCode = _httpResponse.StatusCode;
+            cancellationToken.ThrowIfCancellationRequested();
+            string _responseContent = null;
+            if ((int)_statusCode != 202)
+            {
+                var ex = new DeploymentStacksErrorException(string.Format("Operation returned an invalid status code '{0}'", _statusCode));
+                try
+                {
+                    _responseContent = await _httpResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    DeploymentStacksError _errorBody =  Rest.Serialization.SafeJsonConvert.DeserializeObject<DeploymentStacksError>(_responseContent, Client.DeserializationSettings);
+                    if (_errorBody != null)
+                    {
+                        ex.Body = _errorBody;
+                    }
+                }
+                catch (JsonException)
+                {
+                    // Ignore the exception
+                }
+                ex.Request = new HttpRequestMessageWrapper(_httpRequest, _requestContent);
+                ex.Response = new HttpResponseMessageWrapper(_httpResponse, _responseContent);
+                if (_shouldTrace)
+                {
+                    ServiceClientTracing.Error(_invocationId, ex);
+                }
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw ex;
+            }
+            // Create Result
+            var _result = new AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>();
+            _result.Request = _httpRequest;
+            _result.Response = _httpResponse;
+            if (_httpResponse.Headers.Contains("x-ms-request-id"))
+            {
+                _result.RequestId = _httpResponse.Headers.GetValues("x-ms-request-id").FirstOrDefault();
+            }
+            try
+            {
+                _result.Headers = _httpResponse.GetHeadersAsJson().ToObject<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>(JsonSerializer.Create(Client.DeserializationSettings));
+            }
+            catch (JsonException ex)
+            {
+                _httpRequest.Dispose();
+                if (_httpResponse != null)
+                {
+                    _httpResponse.Dispose();
+                }
+                throw new SerializationException("Unable to deserialize the headers.", _httpResponse.GetHeadersAsJson().ToString(), ex);
+            }
+            if (_shouldTrace)
+            {
+                ServiceClientTracing.Exit(_invocationId, _result);
+            }
+            return _result;
+        }
+
+        /// <summary>
+        /// Lists all the Deployment stacks within the specified Resource Group.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.
@@ -3788,7 +4458,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified subscription.
+        /// Lists all the Deployment stacks within the specified Subscription.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.
@@ -3956,7 +4626,7 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified management group.
+        /// Lists all the Deployment stacks within the specified Management Group.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.

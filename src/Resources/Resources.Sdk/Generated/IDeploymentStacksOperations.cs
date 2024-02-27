@@ -24,8 +24,8 @@ namespace Microsoft.Azure.Management.Resources
     public partial interface IDeploymentStacksOperations
     {
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified resource
-        /// group.
+        /// Lists all the Deployment stacks within the specified Resource
+        /// Group.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified subscription.
+        /// Lists all the Deployment stacks within the specified Subscription.
         /// </summary>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -66,11 +66,11 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtSubscriptionWithHttpMessagesAsync(Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified management
-        /// group.
+        /// Lists all the Deployment stacks within the specified Management
+        /// Group.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtManagementGroupWithHttpMessagesAsync(string managementGroupId, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Resource Group scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> CreateOrUpdateAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Resource Group scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -142,8 +142,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> GetAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Resource Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -152,12 +152,16 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -171,15 +175,15 @@ namespace Microsoft.Azure.Management.Resources
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> DeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> DeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -198,7 +202,7 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> CreateOrUpdateAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -220,19 +224,23 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> GetAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Subscription scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -246,18 +254,18 @@ namespace Microsoft.Azure.Management.Resources
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> DeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> DeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -276,10 +284,11 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> CreateOrUpdateAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Gets a Deployment Stack with a given name.
+        /// Gets a Deployment stack with a given name at Management Group
+        /// scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -301,25 +310,25 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> GetAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Management Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionManagementGroups'>
-        /// Flag to indicate delete rather than detach for the management
+        /// Flag to indicate delete rather than detach for unmanaged management
         /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -336,7 +345,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtManagementGroupHeaders>> DeleteAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at
+        /// Resource Group scope.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -361,7 +371,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStackTemplateDefinition>> ExportTemplateAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at
+        /// Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -383,10 +394,11 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStackTemplateDefinition>> ExportTemplateAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Exports the template used to create the deployment stack.
+        /// Exports the template used to create the Deployment stack at
+        /// Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -408,7 +420,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStackTemplateDefinition>> ExportTemplateAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Runs preflight validation on the Resource Group scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -417,7 +430,81 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>> PreflightValidateStackAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Runs preflight validation on the Subscription scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>> PreflightValidateStackAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Runs preflight validation on the Management Group scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='managementGroupId'>
+        /// Management Group id.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>> PreflightValidateStackAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Creates or updates a Deployment stack at Resource Group scope.
+        /// </summary>
+        /// <param name='resourceGroupName'>
+        /// The name of the resource group. The name is case insensitive.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -436,8 +523,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> BeginCreateOrUpdateAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Resource Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -446,12 +533,16 @@ namespace Microsoft.Azure.Management.Resources
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -465,15 +556,15 @@ namespace Microsoft.Azure.Management.Resources
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> BeginDeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtResourceGroupHeaders>> BeginDeleteAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Subscription scope.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -492,19 +583,23 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> BeginCreateOrUpdateAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Subscription scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
+        /// </param>
+        /// <param name='unmanageActionManagementGroups'>
+        /// Flag to indicate delete rather than detach for unmanaged management
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -518,18 +613,18 @@ namespace Microsoft.Azure.Management.Resources
         /// <exception cref="Microsoft.Rest.ValidationException">
         /// Thrown when a required parameter is null
         /// </exception>
-        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> BeginDeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtSubscriptionHeaders>> BeginDeleteAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Creates or updates a Deployment Stack.
+        /// Creates or updates a Deployment stack at Management Group scope.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='deploymentStack'>
-        /// Deployment Stack supplied to the operation.
+        /// Deployment stack supplied to the operation.
         /// </param>
         /// <param name='customHeaders'>
         /// The headers that will be added to request.
@@ -548,25 +643,25 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<DeploymentStack>> BeginCreateOrUpdateAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Deletes a Deployment Stack by name. When operation completes,
-        /// status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Management Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='managementGroupId'>
-        /// Management Group.
+        /// Management Group id.
         /// </param>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
         /// </param>
         /// <param name='unmanageActionResources'>
-        /// Flag to indicate delete rather than detach for the resources.
+        /// Flag to indicate delete rather than detach for unmanaged resources.
         /// Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionResourceGroups'>
-        /// Flag to indicate delete rather than detach for the resource groups.
-        /// Possible values include: 'delete', 'detach'
+        /// Flag to indicate delete rather than detach for unmanaged resource
+        /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='unmanageActionManagementGroups'>
-        /// Flag to indicate delete rather than detach for the management
+        /// Flag to indicate delete rather than detach for unmanaged management
         /// groups. Possible values include: 'delete', 'detach'
         /// </param>
         /// <param name='customHeaders'>
@@ -583,8 +678,83 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationHeaderResponse<DeploymentStacksDeleteAtManagementGroupHeaders>> BeginDeleteAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, string unmanageActionResources = default(string), string unmanageActionResourceGroups = default(string), string unmanageActionManagementGroups = default(string), Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified resource
-        /// group.
+        /// Runs preflight validation on the Resource Group scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='resourceGroupName'>
+        /// The name of the resource group. The name is case insensitive.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtResourceGroupHeaders>> BeginPreflightValidateStackAtResourceGroupWithHttpMessagesAsync(string resourceGroupName, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Runs preflight validation on the Subscription scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtSubscriptionHeaders>> BeginPreflightValidateStackAtSubscriptionWithHttpMessagesAsync(string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Runs preflight validation on the Management Group scoped Deployment
+        /// stack template to verify its acceptance to Azure Resource Manager.
+        /// </summary>
+        /// <param name='managementGroupId'>
+        /// Management Group id.
+        /// </param>
+        /// <param name='deploymentStackName'>
+        /// Name of the deployment stack.
+        /// </param>
+        /// <param name='deploymentStack'>
+        /// Deployment stack to validate.
+        /// </param>
+        /// <param name='customHeaders'>
+        /// The headers that will be added to request.
+        /// </param>
+        /// <param name='cancellationToken'>
+        /// The cancellation token.
+        /// </param>
+        /// <exception cref="DeploymentStacksErrorException">
+        /// Thrown when the operation returned an invalid status code
+        /// </exception>
+        /// <exception cref="Microsoft.Rest.ValidationException">
+        /// Thrown when a required parameter is null
+        /// </exception>
+        Task<AzureOperationHeaderResponse<DeploymentStacksPreflightValidateStackAtManagementGroupHeaders>> BeginPreflightValidateStackAtManagementGroupWithHttpMessagesAsync(string managementGroupId, string deploymentStackName, DeploymentStack deploymentStack, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
+        /// <summary>
+        /// Lists all the Deployment stacks within the specified Resource
+        /// Group.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.
@@ -606,7 +776,7 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtResourceGroupNextWithHttpMessagesAsync(string nextPageLink, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified subscription.
+        /// Lists all the Deployment stacks within the specified Subscription.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.
@@ -628,8 +798,8 @@ namespace Microsoft.Azure.Management.Resources
         /// </exception>
         Task<AzureOperationResponse<IPage<DeploymentStack>>> ListAtSubscriptionNextWithHttpMessagesAsync(string nextPageLink, Dictionary<string, List<string>> customHeaders = null, CancellationToken cancellationToken = default(CancellationToken));
         /// <summary>
-        /// Lists all the Deployment Stacks within the specified management
-        /// group.
+        /// Lists all the Deployment stacks within the specified Management
+        /// Group.
         /// </summary>
         /// <param name='nextPageLink'>
         /// The NextLink from the previous successful call to List operation.

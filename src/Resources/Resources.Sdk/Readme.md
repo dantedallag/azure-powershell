@@ -103,5 +103,7 @@ These settings apply only when `--tag=package-deploymentstacks-2022-08-preview` 
 
 ``` yaml $(tag) == 'package-deploymentstacks-2022-08-preview'
 input-file:
-- https://github.com/Azure/azure-rest-api-specs/tree/$(commit)/specification/resources/resource-manager/Microsoft.Resources/preview/2022-08-01-preview/deploymentStacks.json
+- C:\Users\danted\kyle-rest-api\specification\resources\resource-manager\Microsoft.Resources\stable\2024-03-01\deploymentStacks.json
 ```
+
+### - C:\Users\danted\kyle-rest-api\specification\resources\resource-manager\Microsoft.Resources\stable\2024-03-01\deploymentStacks.json

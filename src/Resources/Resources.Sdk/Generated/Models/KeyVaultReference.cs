@@ -10,32 +10,30 @@
 
 namespace Microsoft.Azure.Management.Resources.Models
 {
+    using Microsoft.Rest;
     using Newtonsoft.Json;
     using System.Linq;
 
     /// <summary>
-    /// The resourceId extended model. This is used to document failed
-    /// resources with a resourceId and a corresponding error.
+    /// Azure Key Vault reference.
     /// </summary>
-    public partial class ResourceReferenceExtended
+    public partial class KeyVaultReference
     {
         /// <summary>
-        /// Initializes a new instance of the ResourceReferenceExtended class.
+        /// Initializes a new instance of the KeyVaultReference class.
         /// </summary>
-        public ResourceReferenceExtended()
+        public KeyVaultReference()
         {
             CustomInit();
         }
 
         /// <summary>
-        /// Initializes a new instance of the ResourceReferenceExtended class.
+        /// Initializes a new instance of the KeyVaultReference class.
         /// </summary>
-        /// <param name="id">The resourceId of a resource managed by the
-        /// deployment stack.</param>
-        public ResourceReferenceExtended(string id = default(string), ErrorResponse error = default(ErrorResponse))
+        /// <param name="id">Azure Key Vault resourceId.</param>
+        public KeyVaultReference(string id)
         {
             Id = id;
-            Error = error;
             CustomInit();
         }
 
@@ -45,15 +43,23 @@ namespace Microsoft.Azure.Management.Resources.Models
         partial void CustomInit();
 
         /// <summary>
-        /// Gets the resourceId of a resource managed by the deployment stack.
+        /// Gets or sets azure Key Vault resourceId.
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public string Id { get; private set; }
+        public string Id { get; set; }
 
         /// <summary>
+        /// Validate the object.
         /// </summary>
-        [JsonProperty(PropertyName = "error")]
-        public ErrorResponse Error { get; set; }
-
+        /// <exception cref="ValidationException">
+        /// Thrown if validation fails
+        /// </exception>
+        public virtual void Validate()
+        {
+            if (Id == null)
+            {
+                throw new ValidationException(ValidationRules.CannotBeNull, "Id");
+            }
+        }
     }
 }

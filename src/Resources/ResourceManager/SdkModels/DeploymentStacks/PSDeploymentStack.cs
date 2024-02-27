@@ -14,10 +14,12 @@
 
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkExtensions;
+using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks;
 using Microsoft.Azure.Management.Resources.Models;
 using Microsoft.WindowsAzure.Commands.Utilities.Common;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
@@ -33,9 +35,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
         public string type { get; set; }
 
-        public string resourcesCleanupAction { get; set; }
-
-        public string resourceGroupsCleanupAction { get; set; }
+        public PSActionOnUnmanage actionOnUnmanage { get; set; }
 
         public SystemData systemData { get; set; }
 
@@ -45,9 +45,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
         public Dictionary<string, DeploymentVariable> outputs { get; set; }
 
-        public Dictionary<string, DeploymentVariable> parameters { get; set; }
+        public IDictionary<string, PSDeploymentParameter> parameters { get; set; }
 
-        public IDictionary<string, string> Tags { get; set; }
+        public IDictionary<string, string> tags { get; set; }
 
         public DeploymentStacksParametersLink parametersLink { get; set; }
 
@@ -73,6 +73,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
         public ErrorResponse error { get; set; }
 
+        public string correlationId { get; set; }
+
         public PSDeploymentStack() { }
 
         internal PSDeploymentStack(DeploymentStack deploymentStack)
@@ -81,8 +83,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
             this.name = deploymentStack.Name;
             this.type = deploymentStack.Type;
             this.systemData = deploymentStack.SystemData;
-            this.resourcesCleanupAction = (deploymentStack.ActionOnUnmanage != null) ? deploymentStack.ActionOnUnmanage.Resources : null;
-            this.resourceGroupsCleanupAction = (deploymentStack.ActionOnUnmanage != null) ? deploymentStack.ActionOnUnmanage.ResourceGroups : null;
+            this.actionOnUnmanage = ConvertActionOnUnmanage(deploymentStack.ActionOnUnmanage);
             this.location = deploymentStack.Location;
             this.parametersLink = deploymentStack.ParametersLink;
             this.debugSetting = deploymentStack.DebugSetting;
@@ -98,16 +99,43 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
             this.duration = deploymentStack.Duration;
             this.error = deploymentStack.Error;
             this.parametersLink = deploymentStack.ParametersLink;
-            this.Tags = deploymentStack.Tags;
+            this.tags = deploymentStack.Tags;
+            this.correlationId = deploymentStack.CorrelationId;
+
 
             // Convert the raw outputs and parameters objects to dictionaries.
-            this.parameters = deploymentStack.Parameters != null ? FormatMappedObject(deploymentStack.Parameters) : null;
-            this.outputs = deploymentStack.Outputs != null ? FormatMappedObject(deploymentStack.Outputs) : null;
+            // TODO: Fix parameter output before introducing back
+            //this.parameters = deploymentStack.Parameters != null ? FormatParametersObject(deploymentStack.Parameters) : null;
+            this.outputs = deploymentStack.Outputs != null ? FormatOutputsObject(deploymentStack.Outputs) : null;
+        }
+
+        public PSActionOnUnmanage ConvertActionOnUnmanage(DeploymentStackPropertiesActionOnUnmanage actionOnUnmanage)
+        {
+            if (actionOnUnmanage.Resources == "detach" && actionOnUnmanage.ResourceGroups == "detach" && actionOnUnmanage.ManagementGroups == "detach")
+            {
+                return PSActionOnUnmanage.DetachAll;
+            }
+
+            if (actionOnUnmanage.Resources == "delete")
+            {
+                if (actionOnUnmanage.ResourceGroups == "delete" && actionOnUnmanage.ManagementGroups == "delete")
+                {
+                    return PSActionOnUnmanage.DeleteAll;
+                }
+                else if (actionOnUnmanage.ResourceGroups == "detach" && actionOnUnmanage.ManagementGroups == "detach")
+                {
+                    return PSActionOnUnmanage.DeleteResources;
+                }
+            }
+          
+            // TODO: Make better error.
+            throw new Exception("Bad action on unmanage");     
         }
 
         public string GetFormattedParameterTable() 
         {
-            return ResourcesExtensions.ConstructDeploymentVariableTable(this.parameters);
+            // TODO: Need custom implementation for extracting parameter or keyvault reference info
+            return "Will Implement";
         }
 
         public string GetFormattedOutputTable()
@@ -117,7 +145,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
         public string GetFormattedTagTable()
         {
-            return ResourcesExtensions.ConstructTagsTableFromIDictionary(this.Tags);
+            return ResourcesExtensions.ConstructTagsTableFromIDictionary(this.tags);
         }
 
         private const char Whitespace = ' ';
@@ -158,19 +186,19 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
                 : null;
         }
 
-        internal static Dictionary<string, DeploymentVariable> FormatMappedObject(object rawObject)
+        internal static Dictionary<string, DeploymentVariable> FormatOutputsObject(object outputs)
         {
-            Dictionary<string, DeploymentVariable> mappedDeploymentVariables = new Dictionary<string, DeploymentVariable>();
+            var outputsPS = new Dictionary<string, DeploymentVariable>();
 
             // Extract DeploymentVariables from the passed in json object.
-            var jObject = JObject.Parse(rawObject.ToString());
+            var jObject = JObject.Parse(outputs.ToString());
             foreach (var props in jObject.Properties())
             {
-                mappedDeploymentVariables[props.Name] = ExtractDeploymentVariable(props.Value as JObject);
+                outputsPS[props.Name] = ExtractDeploymentVariableFromObject(props.Value as JObject);
             }
 
             // Continue deserialize if the type of Value in DeploymentVariable is array.
-            mappedDeploymentVariables?.Values.ForEach(dv =>
+            outputsPS?.Values.ForEach(dv =>
             { 
                 if ("Array".Equals(dv?.Type) && dv?.Value != null)
                 {
@@ -178,10 +206,34 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
                 }
             });
 
-            return mappedDeploymentVariables;
+            return outputsPS;
         }
 
-        internal static DeploymentVariable ExtractDeploymentVariable(JObject jObject)
+  /*      internal static Dictionary<string, PSDeploymentParameter> FormatParametersObject(IDictionary<string, DeploymentParameter> parameters)
+        {
+            var parametersPS = new Dictionary<string, PSDeploymentParameter>();
+
+            foreach (var key in parameters.Keys)
+            {
+                if (parameters[key].Reference != null)
+                {
+                    parametersPS.Add(key, new PSDeploymentParameter { keyVaultReference = parameters[key].Reference });
+                }
+                else
+                {
+                    parametersPS.Add(key, new PSDeploymentParameter { parameter = ExtractDeploymentVariableFromDeploymentParameter(parameters[key]) });
+                    var parameterType = parametersPS[key].parameter?.Type;
+                    if (parametersPS[key].parameter?.Value != null && "Array".Equals(parameterType))
+                    {
+                        parametersPS[key].parameter.Value = JsonConvert.DeserializeObject<object[]>(parametersPS[key].parameter.Value.ToString());
+                    }
+                }
+            }
+
+            return parametersPS;
+        }*/
+
+        internal static DeploymentVariable ExtractDeploymentVariableFromObject(JObject jObject)
         {
             // Attempt to desialize the DeploymentVariable.
             var dVar = jObject.ToString().FromJson<DeploymentVariable>();

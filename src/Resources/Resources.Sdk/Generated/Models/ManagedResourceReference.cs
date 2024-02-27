@@ -32,12 +32,12 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// <param name="id">The resourceId of a resource managed by the
         /// deployment stack.</param>
         /// <param name="status">Current management state of the resource in
-        /// the deployment stack. Possible values include: 'Managed',
-        /// 'removeDenyFailed', 'deleteFailed', 'None'</param>
+        /// the deployment stack. Possible values include: 'managed',
+        /// 'removeDenyFailed', 'deleteFailed'</param>
         /// <param name="denyStatus">denyAssignment settings applied to the
         /// resource. Possible values include: 'denyDelete', 'notSupported',
         /// 'inapplicable', 'denyWriteAndDelete', 'removedBySystem',
-        /// 'None'</param>
+        /// 'none'</param>
         public ManagedResourceReference(string id = default(string), string status = default(string), string denyStatus = default(string))
             : base(id)
         {
@@ -53,8 +53,8 @@ namespace Microsoft.Azure.Management.Resources.Models
 
         /// <summary>
         /// Gets or sets current management state of the resource in the
-        /// deployment stack. Possible values include: 'Managed',
-        /// 'removeDenyFailed', 'deleteFailed', 'None'
+        /// deployment stack. Possible values include: 'managed',
+        /// 'removeDenyFailed', 'deleteFailed'
         /// </summary>
         [JsonProperty(PropertyName = "status")]
         public string Status { get; set; }
@@ -62,7 +62,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// <summary>
         /// Gets or sets denyAssignment settings applied to the resource.
         /// Possible values include: 'denyDelete', 'notSupported',
-        /// 'inapplicable', 'denyWriteAndDelete', 'removedBySystem', 'None'
+        /// 'inapplicable', 'denyWriteAndDelete', 'removedBySystem', 'none'
         /// </summary>
         [JsonProperty(PropertyName = "denyStatus")]
         public string DenyStatus { get; set; }
