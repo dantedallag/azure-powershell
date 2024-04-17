@@ -638,7 +638,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
            Hashtable tags
        )
         {
-            var actionOnUnmanage = new DeploymentStackPropertiesActionOnUnmanage
+            var actionOnUnmanage = new ActionOnUnmanage
             {
                 Resources = resourcesCleanupAction,
                 ResourceGroups = resourceGroupsCleanupAction,
@@ -860,11 +860,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private List<string> processErrorMessages(ErrorResponse error)
+        private List<string> processErrorMessages(ErrorDetail error)
         {
             List<string> errorMessages = new List<string>();
 
-            Stack<ErrorResponse> stack = new Stack<ErrorResponse>();
+            Stack<ErrorDetail> stack = new Stack<ErrorDetail>();
             stack.Push(error);
 
             while (stack.Count > 0)
@@ -873,7 +873,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 errorMessages.Add(string.Format(ErrorFormat, currentError.Code, currentError.Message));
                 if (currentError.Details != null)
                 {
-                    foreach (ErrorResponse detail in currentError.Details)
+                    foreach (ErrorDetail detail in currentError.Details)
                     {
                         stack.Push(detail);
                     }

@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
         public string deploymentId { get; set; }
 
-        public ErrorResponse error { get; set; }
+        public ErrorDetail error { get; set; }
 
         public string correlationId { get; set; }
 
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
             this.outputs = deploymentStack.Outputs != null ? FormatOutputsObject(deploymentStack.Outputs) : null;
         }
 
-        public PSActionOnUnmanage ConvertActionOnUnmanage(DeploymentStackPropertiesActionOnUnmanage actionOnUnmanage)
+        public PSActionOnUnmanage ConvertActionOnUnmanage(ActionOnUnmanage actionOnUnmanage)
         {
             if (actionOnUnmanage.Resources == "detach" && actionOnUnmanage.ResourceGroups == "detach" && actionOnUnmanage.ManagementGroups == "detach")
             {
@@ -121,6 +121,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
                 if (actionOnUnmanage.ResourceGroups == "delete" && actionOnUnmanage.ManagementGroups == "delete")
                 {
                     return PSActionOnUnmanage.DeleteAll;
+                }
+                // TODO: Probably remove this as this is no longer a valid combination.
+                else if (actionOnUnmanage.ResourceGroups == "delete" && actionOnUnmanage.ManagementGroups == "detach")
+                {
+                    return PSActionOnUnmanage.DeleteResourcesAndResourceGroups;
                 }
                 else if (actionOnUnmanage.ResourceGroups == "detach" && actionOnUnmanage.ManagementGroups == "detach")
                 {
@@ -157,7 +162,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
                 : GetFormattedErrorString(this.error).TrimEnd('\r', '\n');
         }
 
-        private static string GetFormattedErrorString(ErrorResponse error, int level = 0)
+        private static string GetFormattedErrorString(ErrorDetail error, int level = 0)
         {
             if (error.Details == null)
             {
@@ -166,7 +171,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
             string errorDetail = null;
 
-            foreach (ErrorResponse detail in error.Details)
+            foreach (ErrorDetail detail in error.Details)
             {
                 errorDetail += GetIndentation(level) + GetFormattedErrorString(detail, level + 1) + System.Environment.NewLine;
             }
