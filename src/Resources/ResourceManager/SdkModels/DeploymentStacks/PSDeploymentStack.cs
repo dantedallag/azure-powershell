@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
                 {
                     if (pair.Value.KeyVaultReference != null)
                     {
-                        result.AppendFormat(rowFormat, pair.Key, pair.Value.Type, "A cool keyvault");
+                        result.AppendFormat(rowFormat, pair.Key, pair.Value.Type, "keyvault value");
                     }
                     else
                     {
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
             return result.ToString();
         }
 
-        public string GetFormattedParametersTable()
+        public string GetFormattedParameterTable()
         {
             return ConstructDeploymentStacksParametersTable(this.parameters);
         }
@@ -244,7 +244,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
         {
             var parametersPS = new Dictionary<string, PSDeploymentStackParameter>();
 
-            // TODO: Fix this.
             foreach (var key in parameters.Keys)
             {
                 // Each entry will be an explicit parameter value or a key vault reference, both of which can include type.
