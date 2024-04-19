@@ -28,7 +28,6 @@ azure-arm: true
 license-header: MICROSOFT_MIT_NO_VERSION
 ```
 
-
 ## Configuration
 
 ```yaml

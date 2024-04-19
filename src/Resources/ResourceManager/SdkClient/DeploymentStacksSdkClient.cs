@@ -20,9 +20,7 @@ using Microsoft.Azure.Commands.Common.Authentication;
 using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Components;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
-using Microsoft.WindowsAzure.Commands.Common;
 using Newtonsoft.Json.Linq;
-using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Json;
 using Microsoft.WindowsAzure.Commands.Utilities.Common;
 using System.Management.Automation;
 using System.Linq;
@@ -81,6 +79,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
 
             set { this.resourceManagerSdkClient = value; }
+        }
+
+        private enum DeploymentStackScope
+        {
+            ResourceGroup = 0,
+            Subscription,
+            ManagementGroup
         }
 
         /// <summary>
@@ -433,8 +438,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 tags
                 );
 
+            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel), deploymentStackName);
+
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel);
-            var getStackFunc = this.GetStackAction(deploymentStackName, "resourceGroup", rgName: resourceGroupName);
+            var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.ResourceGroup, rgName: resourceGroupName);
 
             var finalStack = this.waitStackCompletion(
                 getStackFunc,
@@ -523,10 +530,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 tags
                 );
 
-            // var validation = DeploymentStacksClient.DeploymentStacks.(deploymentStackName, deploymentStackModel);
+            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtSubscription(deploymentStackName, deploymentStackModel), deploymentStackName);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtSubscription(deploymentStackName, deploymentStackModel);
-            var getStackFunc = this.GetStackAction(deploymentStackName, "subscription");
+            var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.Subscription);
 
             var finalStack = this.waitStackCompletion(
                 getStackFunc,
@@ -600,11 +607,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 tags
                 );
 
+            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtManagementGroup(managementGroupId, deploymentStackName, deploymentStackModel), deploymentStackName);
+
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtManagementGroup(managementGroupId,
                 deploymentStackName, deploymentStackModel);
 
             // TODO: This should not be a defaulted parameter
-            var getStackFunc = this.GetStackAction(deploymentStackName, "managementGroup", mgId: managementGroupId);
+            var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.ManagementGroup, mgId: managementGroupId);
 
             var finalStack = this.waitStackCompletion(
                 getStackFunc,
@@ -793,21 +802,41 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return stack;
         }
 
-        Func<Task<AzureOperationResponse<DeploymentStack>>> GetStackAction(string stackName, string scope, string rgName = null, string mgId = null)
+        Func<Task<AzureOperationResponse<DeploymentStack>>> GetStackAction(string stackName, DeploymentStackScope scope, string rgName = null, string mgId = null)
         {
             switch (scope)
             {
-                case "subscription":
+                case DeploymentStackScope.Subscription:
                     return () => DeploymentStacksClient.DeploymentStacks.GetAtSubscriptionWithHttpMessagesAsync(stackName);
 
-                case "managementGroup":
+                case DeploymentStackScope.ManagementGroup:
                     return () => DeploymentStacksClient.DeploymentStacks.GetAtManagementGroupWithHttpMessagesAsync(mgId, stackName);
 
-                case "resourceGroup":
+                case DeploymentStackScope.ResourceGroup:
                     return () => DeploymentStacksClient.DeploymentStacks.GetAtResourceGroupWithHttpMessagesAsync(rgName, stackName);
 
                 default:
-                    throw new NotImplementedException();
+                    throw new NotImplementedException("Scope not supported.");
+            }
+        }
+
+        private DeploymentStackValidateResult ValidateDeploymentStack(DeploymentStack deploymentStack, DeploymentStackScope scope, string scopeName)
+        {
+            switch (scope)
+            {
+                case DeploymentStackScope.ResourceGroup:
+                    // TODO: Aux tenant?
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtResourceGroup(scopeName, deploymentStack.Name, deploymentStack);
+
+                case DeploymentStackScope.Subscription:
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtSubscription(deploymentStack.Name, deploymentStack);
+
+                case DeploymentStackScope.ManagementGroup:
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtManagementGroup(scopeName, deploymentStack.Name, deploymentStack);
+
+                default:
+                    throw new NotImplementedException("Scope not supported.");
+
             }
         }
 
@@ -880,6 +909,63 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 }
             }
             return errorMessages;
+        }
+
+        private void CheckValidationResultForError(DeploymentStackValidateResult validationResult, string deploymentStackName)
+        {
+            var error = validationResult.Error;
+
+            if (validationResult.Error != null)
+            {
+                WriteError(string.Format(ErrorFormat, error.Code, error.Message));
+                if (error.Details != null && error.Details.Count > 0)
+                {
+                    foreach (var innerError in error.Details)
+                    {
+                        DisplayInnerDetailErrorMessage(innerError);
+                    }
+                }
+
+                throw new InvalidOperationException($"Validation for deployment stack '{deploymentStackName}' failed.");
+            }
+            else
+            {
+                WriteVerbose(ProjectResources.TemplateValid);
+            }
+        }
+
+        private void DisplayInnerDetailErrorMessage(ErrorDetail error)
+        {
+            WriteError(string.Format(ErrorFormat, error.Code, error.Message));
+            if (error.Details != null)
+            {
+                foreach (var innerError in error.Details)
+                {
+                    DisplayInnerDetailErrorMessage(innerError);
+                }
+            }
+        }
+
+        private List<ErrorResponse> HandleValidationError(Exception ex)
+        {
+            if (ex == null)
+            {
+                return null;
+            }
+
+            ErrorResponse error = null;
+            var innerException = HandleValidationError(ex.InnerException);
+            if (ex is CloudException)
+            {
+                var cloudEx = ex as CloudException;
+                error = new ErrorResponse(cloudEx.Body?.Code, cloudEx.Body?.Message, cloudEx.Body?.Target, innerException);
+            }
+            else
+            {
+                error = new ErrorResponse(null, ex.Message, null, innerException);
+            }
+
+            return new List<ErrorResponse> { error };
         }
     }
 }

@@ -13,21 +13,15 @@
 // ----------------------------------------------------------------------------------
 
 using Microsoft.Azure.Management.Resources.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks
 {
-    public class PSDeploymentParameter
+    public class PSDeploymentStackParameter
     {
-        public DeploymentVariable parameter;
+        public string Type;
 
-        public KeyVaultParameterReference keyVaultReference;
+        public object Value;
 
-        public override string ToString()
-        {
-            return "implementing";
-        }
+        public KeyVaultParameterReference KeyVaultReference;
     }
 }
