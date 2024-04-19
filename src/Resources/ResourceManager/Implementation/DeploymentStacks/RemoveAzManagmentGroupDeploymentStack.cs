@@ -66,6 +66,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [Parameter(Mandatory = false, HelpMessage = "Do not ask for confirmation.")]
         public SwitchParameter Force { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "Bypass errors for the stack being out of sync when running the operation. If the stack is out of sync and this parameter " +
+            "is not set, the operation will fail")]
+        public SwitchParameter BypassStackOutOfSyncError { get; set; }
+
         #endregion
 
         #region Cmdlet Overrides
@@ -118,7 +122,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                             ManagementGroupId,
                             resourcesCleanupAction: shouldDeleteResources ? "delete" : "detach",
                             resourceGroupsCleanupAction: shouldDeleteResourceGroups ? "delete" : "detach",
-                            managementGroupsCleanupAction: shouldDeleteManagementGroups ? "delete" : "detach"
+                            managementGroupsCleanupAction: shouldDeleteManagementGroups ? "delete" : "detach",
+                            bypassStackOutOfSyncError: BypassStackOutOfSyncError.IsPresent
                         );
                         if (PassThru.IsPresent)
                         {

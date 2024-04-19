@@ -81,6 +81,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         [Parameter(Mandatory = false, HelpMessage = "Run cmdlet in the background.")]
         public SwitchParameter AsJob { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "Bypass errors for the stack being out of sync when running the operation. If the stack is out of sync and this parameter " +
+            "is not set, the operation will fail")]
+        public SwitchParameter BypassStackOutOfSyncError { get; set; }
+
         #endregion
 
         #region Cmdlet Overrides
@@ -123,7 +127,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
                         denySettingsExcludedPrincipals: DenySettingsExcludedPrincipal,
                         denySettingsExcludedActions: DenySettingsExcludedAction,
                         denySettingsApplyToChildScopes: DenySettingsApplyToChildScopes.IsPresent,
-                        tags: Tag
+                        tags: Tag,
+                        bypassStackOutOfSyncError: BypassStackOutOfSyncError.IsPresent
                     );
 
                     WriteObject(deploymentStack);

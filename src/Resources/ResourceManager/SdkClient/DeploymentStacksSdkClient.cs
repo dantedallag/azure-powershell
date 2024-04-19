@@ -32,6 +32,7 @@ using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Proper
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.Deployments;
 using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
 using Newtonsoft.Json;
+using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentStacks;
 
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 {
@@ -414,7 +415,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             string[] denySettingsExcludedPrincipals,
             string[] denySettingsExcludedActions,
             bool denySettingsApplyToChildScopes,
-            Hashtable tags
+            Hashtable tags,
+            bool bypassStackOutOfSyncError
             )
         {
             // Create Deployment stack deployment model:
@@ -435,10 +437,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 denySettingsExcludedPrincipals,
                 denySettingsExcludedActions,
                 denySettingsApplyToChildScopes,
-                tags
+                tags,
+                bypassStackOutOfSyncError
                 );
 
-            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel), deploymentStackName);
+            ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.ResourceGroup, resourceGroupName);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel);
             var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.ResourceGroup, rgName: resourceGroupName);
@@ -455,10 +458,17 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return new PSDeploymentStack(finalStack);
         }
 
-        internal void DeleteResourceGroupDeploymentStack(string resourceGroupName, string name, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
+        internal void DeleteResourceGroupDeploymentStack(
+            string resourceGroupName, 
+            string name, 
+            string resourcesCleanupAction, 
+            string resourceGroupsCleanupAction, 
+            string managementGroupsCleanupAction,
+            bool bypassStackOutOfSyncError
+        )
         {
             var deleteResponse = DeploymentStacksClient.DeploymentStacks
-                .DeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
+                .DeleteAtResourceGroupWithHttpMessagesAsync(resourceGroupName, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction, bypassStackOutOfSyncError)
                 .GetAwaiter()
                 .GetResult();
 
@@ -472,9 +482,15 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return;
         }
 
-        internal void DeleteSubscriptionDeploymentStack(string name, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
+        internal void DeleteSubscriptionDeploymentStack(
+            string name, 
+            string resourcesCleanupAction, 
+            string resourceGroupsCleanupAction, 
+            string managementGroupsCleanupAction,
+            bool bypassStackOutOfSyncError
+        )
         {
-            var deleteResponse = DeploymentStacksClient.DeploymentStacks.DeleteAtSubscriptionWithHttpMessagesAsync(name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
+            var deleteResponse = DeploymentStacksClient.DeploymentStacks.DeleteAtSubscriptionWithHttpMessagesAsync(name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction, bypassStackOutOfSyncError)
                 .GetAwaiter()
                 .GetResult();
 
@@ -506,7 +522,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             string[] denySettingsExcludedPrincipals,
             string[] denySettingsExcludedActions,
             bool denySettingsApplyToChildScopes,
-            Hashtable tags
+            Hashtable tags,
+            bool bypassStackOutOfSyncError
         )
         {
             // Create Deployment stack deployment model:
@@ -527,10 +544,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 denySettingsExcludedPrincipals,
                 denySettingsExcludedActions,
                 denySettingsApplyToChildScopes,
-                tags
+                tags,
+                bypassStackOutOfSyncError
                 );
 
-            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtSubscription(deploymentStackName, deploymentStackModel), deploymentStackName);
+            ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.Subscription);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtSubscription(deploymentStackName, deploymentStackModel);
             var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.Subscription);
@@ -547,10 +565,17 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return new PSDeploymentStack(finalStack);
         }
 
-        internal void DeleteManagementGroupDeploymentStack(string name, string managementGroupId, string resourcesCleanupAction, string resourceGroupsCleanupAction, string managementGroupsCleanupAction)
+        internal void DeleteManagementGroupDeploymentStack(
+            string name, 
+            string managementGroupId, 
+            string resourcesCleanupAction, 
+            string resourceGroupsCleanupAction, 
+            string managementGroupsCleanupAction,
+            bool bypassStackOutOfSyncError
+        )
         {
             var deleteResponse = DeploymentStacksClient.DeploymentStacks
-                    .DeleteAtManagementGroupWithHttpMessagesAsync(managementGroupId, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction)
+                    .DeleteAtManagementGroupWithHttpMessagesAsync(managementGroupId, name, resourcesCleanupAction, resourceGroupsCleanupAction, managementGroupsCleanupAction, bypassStackOutOfSyncError)
                     .GetAwaiter()
                     .GetResult();
 
@@ -583,7 +608,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             string[] denySettingsExcludedPrincipals,
             string[] denySettingsExcludedActions,
             bool denySettingsApplyToChildScopes,
-            Hashtable tags
+            Hashtable tags,
+            bool bypassStackOutOfSyncError
         )
         {
             // Create Deployment stack deployment model:
@@ -604,10 +630,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 denySettingsExcludedPrincipals,
                 denySettingsExcludedActions,
                 denySettingsApplyToChildScopes,
-                tags
+                tags,
+                bypassStackOutOfSyncError
                 );
 
-            CheckValidationResultForError(DeploymentStacksClient.DeploymentStacks.ValidateStackAtManagementGroup(managementGroupId, deploymentStackName, deploymentStackModel), deploymentStackName);
+            ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.ManagementGroup, managementGroupId);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtManagementGroup(managementGroupId,
                 deploymentStackName, deploymentStackModel);
@@ -644,7 +671,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
            string[] denySettingsExcludedPrincipals,
            string[] denySettingsExcludedActions,
            bool denySettingsApplyToChildScopes,
-           Hashtable tags
+           Hashtable tags,
+           bool bypassStackOutOfSyncError
        )
         {
             var actionOnUnmanage = new ActionOnUnmanage
@@ -668,7 +696,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 ActionOnUnmanage = actionOnUnmanage,
                 DeploymentScope = deploymentScope,
                 DenySettings = denySettings,
-                Tags = TagsHelper.ConvertToTagsDictionary(tags)
+                Tags = TagsHelper.ConvertToTagsDictionary(tags),
+                BypassStackOutOfSyncError = bypassStackOutOfSyncError
             };
 
             // Evaulate Template:
@@ -820,26 +849,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private DeploymentStackValidateResult ValidateDeploymentStack(DeploymentStack deploymentStack, DeploymentStackScope scope, string scopeName)
-        {
-            switch (scope)
-            {
-                case DeploymentStackScope.ResourceGroup:
-                    // TODO: Aux tenant?
-                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtResourceGroup(scopeName, deploymentStack.Name, deploymentStack);
-
-                case DeploymentStackScope.Subscription:
-                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtSubscription(deploymentStack.Name, deploymentStack);
-
-                case DeploymentStackScope.ManagementGroup:
-                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtManagementGroup(scopeName, deploymentStack.Name, deploymentStack);
-
-                default:
-                    throw new NotImplementedException("Scope not supported.");
-
-            }
-        }
-
         private DeploymentStack PollDeployments(DeploymentStack stack)
         {
             string deploymentId = stack.DeploymentId;
@@ -911,18 +920,21 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return errorMessages;
         }
 
-        private void CheckValidationResultForError(DeploymentStackValidateResult validationResult, string deploymentStackName)
+        private void ValidateDeploymentStack(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName = "")
         {
-            var error = validationResult.Error;
+            var validationResult = RunDeploymentStackValidation(deploymentStack, deploymentStackName, scope, scopeName);   
 
-            if (validationResult.Error != null)
+            if (validationResult.Errors.Count != 0)
             {
-                WriteError(string.Format(ErrorFormat, error.Code, error.Message));
-                if (error.Details != null && error.Details.Count > 0)
+                foreach (var error in validationResult.Errors)
                 {
-                    foreach (var innerError in error.Details)
+                    WriteError(string.Format(ErrorFormat, error.Code, error.Message));
+                    if (error.Details != null && error.Details.Count > 0)
                     {
-                        DisplayInnerDetailErrorMessage(innerError);
+                        foreach (var innerError in error.Details)
+                        {
+                            DisplayInnerDetailErrorMessage(innerError);
+                        }
                     }
                 }
 
@@ -931,6 +943,40 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             else
             {
                 WriteVerbose(ProjectResources.TemplateValid);
+            }
+        }
+
+        private PSDeploymentStackValidationInfo RunDeploymentStackValidation(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName)
+        {
+            try
+            {
+                var validationResult = this.RunValidationAtScope(deploymentStack, deploymentStackName, scope, scopeName);
+
+                return new PSDeploymentStackValidationInfo(validationResult);
+            }
+            catch (Exception ex)
+            {
+                var error = HandleValidationError(ex).FirstOrDefault();
+                return new PSDeploymentStackValidationInfo(new DeploymentStackValidateResult(error: error));
+            }
+        }
+
+        private DeploymentStackValidateResult RunValidationAtScope(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName)
+        {
+            switch (scope)
+            {
+                case DeploymentStackScope.ResourceGroup:
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtResourceGroup(scopeName, deploymentStackName, deploymentStack);
+
+                case DeploymentStackScope.Subscription:
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtSubscription(deploymentStackName, deploymentStack);
+
+                case DeploymentStackScope.ManagementGroup:
+                    return DeploymentStacksClient.DeploymentStacks.ValidateStackAtManagementGroup(scopeName, deploymentStackName, deploymentStack);
+
+                default:
+                    throw new NotImplementedException("Scope not supported.");
+
             }
         }
 
@@ -946,26 +992,26 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private List<ErrorResponse> HandleValidationError(Exception ex)
+        private List<ErrorDetail> HandleValidationError(Exception ex)
         {
             if (ex == null)
             {
                 return null;
             }
 
-            ErrorResponse error = null;
+            ErrorDetail error = null;
             var innerException = HandleValidationError(ex.InnerException);
             if (ex is CloudException)
             {
                 var cloudEx = ex as CloudException;
-                error = new ErrorResponse(cloudEx.Body?.Code, cloudEx.Body?.Message, cloudEx.Body?.Target, innerException);
+                error = new ErrorDetail(cloudEx.Body?.Code, cloudEx.Body?.Message, cloudEx.Body?.Target, innerException);
             }
             else
             {
-                error = new ErrorResponse(null, ex.Message, null, innerException);
+                error = new ErrorDetail(null, ex.Message, null, innerException);
             }
 
-            return new List<ErrorResponse> { error };
+            return new List<ErrorDetail> { error };
         }
     }
 }

@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using ProjectResources = Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties.Resources;
 
@@ -129,25 +130,35 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels
 
             StringBuilder result = new StringBuilder();
 
-            if (dictionary.Count > 0)
+            var rawParameters = dictionary.Where(entry => entry.Value.KeyVaultReference == null);
+            var refParameters = dictionary.Where(entry => entry.Value.KeyVaultReference != null);
+
+            if (rawParameters.Count() > 0)
             {
                 string rowFormat = "{0, -" + maxNameLength + "}  {1, -" + maxTypeLength + "}  {2, -10}\r\n";
                 result.AppendLine();
                 result.AppendFormat(rowFormat, "Name", "Type", "Value");
                 result.AppendFormat(rowFormat, GeneralUtilities.GenerateSeparator(maxNameLength, "="), GeneralUtilities.GenerateSeparator(maxTypeLength, "="), GeneralUtilities.GenerateSeparator(10, "="));
 
-                foreach (KeyValuePair<string, PSDeploymentStackParameter> pair in dictionary)
+                foreach (KeyValuePair<string, PSDeploymentStackParameter> pair in rawParameters)
                 {
-                    if (pair.Value.KeyVaultReference != null)
-                    {
-                        result.AppendFormat(rowFormat, pair.Key, pair.Value.Type, "keyvault value");
-                    }
-                    else
-                    {
-                        result.AppendFormat(rowFormat, pair.Key, pair.Value.Type,
-                            JsonConvert.SerializeObject(pair.Value.Value).Indent(maxNameLength + maxTypeLength + 4).Trim());
-                    }
+                    result.AppendFormat(rowFormat, pair.Key, pair.Value.Type,
+                        JsonConvert.SerializeObject(pair.Value.Value).Indent(maxNameLength + maxTypeLength + 4).Trim());
                 }
+            }
+
+            if (refParameters.Count() > 0)
+            {
+                string rowFormat = "{0, -" + maxNameLength + "}  {1, -" + maxTypeLength + "}  {2, -10}  {3, -15}  {4, -10}\r\n";
+                result.AppendLine();
+                result.AppendFormat(rowFormat, "Name", "Type", "SecretName", "SecretVersion", "KeyVault");
+                result.AppendFormat(rowFormat, GeneralUtilities.GenerateSeparator(maxNameLength, "="), GeneralUtilities.GenerateSeparator(maxTypeLength, "="), GeneralUtilities.GenerateSeparator(10, "="), GeneralUtilities.GenerateSeparator(15, "="), GeneralUtilities.GenerateSeparator(10, "="));
+
+                foreach (KeyValuePair<string, PSDeploymentStackParameter> pair in refParameters)
+                { 
+                    result.AppendFormat(rowFormat, pair.Key, pair.Value.Type, pair.Value.KeyVaultReference.SecretName, pair.Value.KeyVaultReference.SecretVersion, pair.Value.KeyVaultReference.KeyVault.Id);
+                }
+          
             }
 
             return result.ToString();
