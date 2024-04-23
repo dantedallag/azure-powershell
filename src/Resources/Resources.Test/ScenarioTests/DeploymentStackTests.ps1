@@ -30,7 +30,7 @@ function Test-GetResourceGroupDeploymentStack
 	{
 		# Prepare 
 		New-AzResourceGroup -Name $rgname -Location $rglocation
-		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None DetachAll -Force
+		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
 		$resourceId = "/subscriptions/$subId/resourcegroups/$rgname/providers/Microsoft.Resources/deploymentStacks/$rname"
 
 		# Test - GetByNameAndResourceGroup - Success 
@@ -341,7 +341,7 @@ function Test-SetResourceGroupDeploymentStackUnmanageActions
 		# Test - Setting a blank stack with DeleteResources set 
 		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
-		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile blankTemplate.json -DenySettingsMode None --ActionOnUnmanage DeleteResources -Force
+		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile blankTemplate.json -DenySettingsMode None -ActionOnUnmanage DeleteResources -Force
 
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
@@ -350,7 +350,7 @@ function Test-SetResourceGroupDeploymentStackUnmanageActions
 		# Test - Setting a blank stack with DeleteAll set 
 		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
-		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile blankTemplate.json -DenySettingsMode None --ActionOnUnmanage DeleteAll -Force
+		$deployment = Set-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile blankTemplate.json -DenySettingsMode None -ActionOnUnmanage DeleteAll -Force
 
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
@@ -492,7 +492,7 @@ function Test-RemoveResourceGroupDeploymentStack
 		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname --ActionOnUnmanage DeleteResources -PassThru -Force
+		$deployment = Remove-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -ActionOnUnmanage DeleteResources -PassThru -Force
 		Assert-AreEqual "true" $deployment
 
 
@@ -500,7 +500,7 @@ function Test-RemoveResourceGroupDeploymentStack
 		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterFile StacksRGTemplateParams.json -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname --ActionOnUnmanage DeleteAll -PassThru -Force
+		$deployment = Remove-AzResourceGroupDeploymentStack -Name $rname -ResourceGroupName $rgname -ActionOnUnmanage DeleteAll -PassThru -Force
 		Assert-AreEqual "true" $deployment
 	}
 
@@ -644,7 +644,7 @@ function Test-GetSubscriptionDeploymentStack
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -695,7 +695,7 @@ function Test-NewSubscriptionDeploymentStack
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -730,7 +730,7 @@ function Test-NewAndSetSubscriptionDeploymentStackWithTags
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -760,7 +760,7 @@ function Test-NewSubscriptionDeploymentStackUnmanageActions
 		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json --ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
+		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json -ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
 		Assert-AreEqual "detach" $deployment.ResourceGroupsCleanupAction
@@ -769,7 +769,7 @@ function Test-NewSubscriptionDeploymentStackUnmanageActions
 		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json --ActionOnUnmanage DeleteAll -Location $location -DenySettingsMode None -Force
+		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json -ActionOnUnmanage DeleteAll -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
 		Assert-AreEqual "delete" $deployment.ResourceGroupsCleanupAction
@@ -778,7 +778,7 @@ function Test-NewSubscriptionDeploymentStackUnmanageActions
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -884,7 +884,7 @@ function Test-SetSubscriptionDeploymentStackUnmanageActions
 		# Test - Setting a blank stack with DeleteResources set 
 		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
-		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json --ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
+		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json -ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
 
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
@@ -893,7 +893,7 @@ function Test-SetSubscriptionDeploymentStackUnmanageActions
 		# Test - Setting a blank stack with DeleteAll set 
 		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
-		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json --ActionOnUnmanage DeleteAll -Location $location -DenySettingsMode None -Force
+		$deployment = Set-AzSubscriptionDeploymentStack -Name $rname -TemplateFile blankTemplate.json -ActionOnUnmanage DeleteAll -Location $location -DenySettingsMode None -Force
 
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
@@ -903,7 +903,7 @@ function Test-SetSubscriptionDeploymentStackUnmanageActions
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -935,7 +935,7 @@ function Test-NewAndSetSubscriptionDeploymentStackWithBicep
 	finally 
 	{
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
 	}
 }
 
@@ -981,7 +981,7 @@ function Test-NewAndSetSubscriptionDeploymentStackWithBicep
      {
          # Cleanup
          Clean-ResourceGroup $rgname
-		 Remove-AzSubscriptionDeploymentStack -Name $stackname --ActionOnUnmanage DeleteAll -Force
+		 Remove-AzSubscriptionDeploymentStack -Name $stackname -ActionOnUnmanage DeleteAll -Force
      }
  }
 
@@ -1023,14 +1023,14 @@ function Test-RemoveSubscriptionDeploymentStack
 		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteResources -PassThru -Force
+		$deployment = Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteResources -PassThru -Force
 		Assert-AreEqual "true" $deployment
 
 		# Test - Success with PassThru - DeleteAll
 		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -TemplateFile StacksSubTemplate.json -TemplateParameterFile StacksSubTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -PassThru -Force
+		$deployment = Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -PassThru -Force
 		Assert-AreEqual "true" $deployment
 	}
 	finally
@@ -1083,7 +1083,7 @@ function Test-SaveSubscriptionDeploymentStackTemplate
 	finally
     {
         # Cleanup
-        Remove-AzSubscriptionDeploymentStack -Name $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzSubscriptionDeploymentStack -Name $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -1134,7 +1134,7 @@ function Test-GetManagementGroupDeploymentStack
 	finally
     {
         # Cleanup
-        Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+        Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -1215,7 +1215,7 @@ function Test-NewManagementGroupDeploymentStack
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
         
     }
 }
@@ -1253,7 +1253,7 @@ function Test-NewAndSetManagementGroupDeploymentStackWithTags
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
         
     }
 }
@@ -1286,7 +1286,7 @@ function Test-NewManagementGroupDeploymentStackUnmanageActions
 		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile StacksMGTemplate.json -TemplateParameterFile StacksMGTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile blankTemplate.json --ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
+		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile blankTemplate.json -ActionOnUnmanage DeleteResources -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
 		Assert-AreEqual "detach" $deployment.ResourceGroupsCleanupAction
@@ -1295,7 +1295,7 @@ function Test-NewManagementGroupDeploymentStackUnmanageActions
 		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile StacksMGTemplate.json -TemplateParameterFile StacksMGTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile blankTemplate.json -Location $location -DenySettingsMode None --ActionOnUnmanage DeleteAll -Force
+		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile blankTemplate.json -Location $location -DenySettingsMode None -ActionOnUnmanage DeleteAll -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 		Assert-AreEqual "delete" $deployment.ResourcesCleanupAction
 		Assert-AreEqual "delete" $deployment.ResourceGroupsCleanupAction
@@ -1304,7 +1304,7 @@ function Test-NewManagementGroupDeploymentStackUnmanageActions
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
         
     }
 }
@@ -1337,7 +1337,7 @@ function Test-NewAndSetManagementGroupDeploymentStackDenySettings
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -1438,7 +1438,7 @@ function Test-SetManagementGroupDeploymentStackUnmanageActions
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
@@ -1472,7 +1472,7 @@ function Test-NewAndSetManagementGroupDeploymentStackWithBicep
 	finally 
 	{
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
 	}
 }
 
@@ -1518,7 +1518,7 @@ function Test-NewAndSetManagementGroupDeploymentStackWithBicep
  	finally
      {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $stackname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $stackname -ActionOnUnmanage DeleteAll -Force
      }
  }
 
@@ -1562,14 +1562,14 @@ function Test-RemoveManagementGroupDeploymentStack
 		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile StacksMGTemplate.json -TemplateParameterFile StacksMGTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid --ActionOnUnmanage DeleteResources -PassThru -Force
+		$deployment = Remove-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -ActionOnUnmanage DeleteResources -PassThru -Force
 		Assert-AreEqual "true" $deployment
 
 		# Test - Success with PassThru - DeleteAll
 		$deployment = New-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -DeploymentSubscriptionId $subId -TemplateFile StacksMGTemplate.json -TemplateParameterFile StacksMGTemplateParams.json -Location $location -DenySettingsMode None -Force
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 
-		$deployment = Remove-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid --ActionOnUnmanage DeleteAll -PassThru -Force
+		$deployment = Remove-AzManagementGroupDeploymentStack -Name $rname -ManagementGroupId $mgid -ActionOnUnmanage DeleteAll -PassThru -Force
 		Assert-AreEqual "true" $deployment
 	}
 
@@ -1623,7 +1623,7 @@ function Test-SaveManagementGroupDeploymentStackTemplate
 	finally
     {
 		# Cleanup
-		Remove-AzManagementGroupDeploymentStack $mgid $rname --ActionOnUnmanage DeleteAll -Force
+		Remove-AzManagementGroupDeploymentStack $mgid $rname -ActionOnUnmanage DeleteAll -Force
     }
 }
 
