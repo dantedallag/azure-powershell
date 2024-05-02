@@ -749,7 +749,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             {
                 var error = deploymentStack.Error;
                 var sb = new StringBuilder();
-                List<string> errorMessages = processErrorMessages(error);
+                List<string> errorMessages = extractErrorMessages(error);
                 sb.AppendFormat(ProjectResources.DeploymentStackOperationOuterError, deploymentStack.Name, errorMessages.Count, errorMessages.Count);
                 sb.AppendLine();
 
@@ -898,7 +898,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private List<string> processErrorMessages(ErrorDetail error)
+        private List<string> extractErrorMessages(ErrorDetail error)
         {
             List<string> errorMessages = new List<string>();
 
@@ -924,20 +924,18 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
         {
             var validationResult = RunDeploymentStackValidation(deploymentStack, deploymentStackName, scope, scopeName);   
 
-            if (validationResult.Errors.Count != 0)
+            if (validationResult.Error != null)
             {
-                foreach (var error in validationResult.Errors)
+                var sb = new StringBuilder();
+                List<string> errorMessages = extractErrorMessages(validationResult.Error);
+
+                foreach (string message in errorMessages)
                 {
-                    WriteError(string.Format(ErrorFormat, error.Code, error.Message));
-                    if (error.Details != null && error.Details.Count > 0)
-                    {
-                        foreach (var innerError in error.Details)
-                        {
-                            DisplayInnerDetailErrorMessage(innerError);
-                        }
-                    }
+                    sb.AppendLine(message);
                 }
 
+                WriteError(sb.ToString());
+                
                 throw new InvalidOperationException($"Validation for deployment stack '{deploymentStackName}' failed.");
             }
             else
@@ -956,8 +954,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
             catch (Exception ex)
             {
-                var error = HandleValidationError(ex).FirstOrDefault();
-                return new PSDeploymentStackValidationInfo(new DeploymentStackValidateResult(error: error));
+                return new PSDeploymentStackValidationInfo(new DeploymentStackValidateResult(error: ConvertValidationExceptionToError(ex)));
             }
         }
 
@@ -980,38 +977,24 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private void DisplayInnerDetailErrorMessage(ErrorDetail error)
-        {
-            WriteError(string.Format(ErrorFormat, error.Code, error.Message));
-            if (error.Details != null)
-            {
-                foreach (var innerError in error.Details)
-                {
-                    DisplayInnerDetailErrorMessage(innerError);
-                }
-            }
-        }
-
-        private List<ErrorDetail> HandleValidationError(Exception ex)
+        private ErrorDetail ConvertValidationExceptionToError(Exception ex)
         {
             if (ex == null)
             {
                 return null;
             }
 
-            ErrorDetail error = null;
-            var innerException = HandleValidationError(ex.InnerException);
-            if (ex is CloudException)
+            var innerExceptionAsError = ConvertValidationExceptionToError(ex.InnerException);
+
+            if (ex is DeploymentStacksErrorException)
             {
-                var cloudEx = ex as CloudException;
-                error = new ErrorDetail(cloudEx.Body?.Code, cloudEx.Body?.Message, cloudEx.Body?.Target, innerException);
+                var stackEx = ex as DeploymentStacksErrorException;
+                return new ErrorDetail(stackEx.Body?.Error.Code, stackEx.Body?.Error.Message, stackEx.Body?.Error.Target, innerExceptionAsError != null ? new ErrorDetail[] { innerExceptionAsError } : null);
             }
             else
             {
-                error = new ErrorDetail(null, ex.Message, null, innerException);
+                return new ErrorDetail(null, ex.Message, null, innerExceptionAsError != null ? new ErrorDetail[] { innerExceptionAsError } : null);
             }
-
-            return new List<ErrorDetail> { error };
         }
     }
 }

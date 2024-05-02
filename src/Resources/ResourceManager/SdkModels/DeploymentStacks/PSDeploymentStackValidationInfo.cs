@@ -20,14 +20,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.DeploymentS
     {
         public PSDeploymentStackValidationInfo(DeploymentStackValidateResult validationResult)
         {
-            Errors = new List<ErrorDetail>();
-
-            if (validationResult.Error != null)
-            {
-                Errors.Add(validationResult.Error);
-            }
+            Error = validationResult.Error;
         }
 
-        public List<ErrorDetail> Errors { get; set; }
+        public ErrorDetail Error { get; set; }
     }
 }
