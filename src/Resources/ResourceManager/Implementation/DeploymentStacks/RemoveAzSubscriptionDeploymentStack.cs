@@ -62,7 +62,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation
         public SwitchParameter Force { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Bypass errors for the stack being out of sync when running the operation. If the stack is out of sync and this parameter " +
-            "is not set, the operation will fail")]
+            "is not set, the operation will fail. Only include this parameter if instructed to do so on a failed stack operation.")]
         public SwitchParameter BypassStackOutOfSyncError { get; set; }
 
         #endregion

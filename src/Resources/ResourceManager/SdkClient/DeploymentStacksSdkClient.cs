@@ -454,7 +454,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 "Canceled"
                 );
 
-            errorValidation(finalStack);
+            HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
         }
 
@@ -561,7 +561,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 "Canceled"
                 );
 
-            errorValidation(finalStack);
+            HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
         }
 
@@ -650,7 +650,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 "Canceled"
                 );
 
-            errorValidation(finalStack);
+            HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
         }
 
@@ -743,13 +743,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return deploymentStackModel;
         }
 
-        private void errorValidation(DeploymentStack deploymentStack)
+        private void HandleErrors(DeploymentStack deploymentStack)
         {
             if (deploymentStack.Error != null)
             {
                 var error = deploymentStack.Error;
                 var sb = new StringBuilder();
-                List<string> errorMessages = extractErrorMessages(error);
+                List<string> errorMessages = ExtractErrorMessages(error);
                 sb.AppendFormat(ProjectResources.DeploymentStackOperationOuterError, deploymentStack.Name, errorMessages.Count, errorMessages.Count);
                 sb.AppendLine();
 
@@ -898,7 +898,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private List<string> extractErrorMessages(ErrorDetail error)
+        private List<string> ExtractErrorMessages(ErrorDetail error)
         {
             List<string> errorMessages = new List<string>();
 
@@ -927,7 +927,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             if (validationResult.Error != null)
             {
                 var sb = new StringBuilder();
-                List<string> errorMessages = extractErrorMessages(validationResult.Error);
+                List<string> errorMessages = ExtractErrorMessages(validationResult.Error);
 
                 foreach (string message in errorMessages)
                 {
@@ -948,7 +948,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
         {
             try
             {
-                var validationResult = this.RunValidationAtScope(deploymentStack, deploymentStackName, scope, scopeName);
+                var validationResult = this.RunDeploymentStackValidationAtScope(deploymentStack, deploymentStackName, scope, scopeName);
 
                 return new PSDeploymentStackValidationInfo(validationResult);
             }
@@ -958,7 +958,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             }
         }
 
-        private DeploymentStackValidateResult RunValidationAtScope(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName)
+        private DeploymentStackValidateResult RunDeploymentStackValidationAtScope(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName)
         {
             switch (scope)
             {
