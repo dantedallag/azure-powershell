@@ -115,8 +115,9 @@ function Test-NewResourceGroupDeploymentStack
 
 		# --- ParameterObjectTemplateFileParameterSetName ---
 
-		# Test - Success
-		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -Description "A Stack" -ResourceGroup $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterObject @{templateSpecName = "StacksScenarioTestSpec"} -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
+		# Test - Success (with BypassStackOutOfSyncError)
+		$deployment = New-AzResourceGroupDeploymentStack -Name $rname -Description "A Stack" -ResourceGroup $rgname -TemplateFile StacksRGTemplate.json -TemplateParameterObject @{templateSpecName = "StacksScenarioTestSpec"} -DenySettingsMode None -ActionOnUnmanage DetachAll -BypassStackOutOfSyncError -Force
+		Assert-True $deployment.BypassStackOutOfSyncError true
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 	}
 
@@ -686,10 +687,11 @@ function Test-NewSubscriptionDeploymentStack
 		$exceptionMessage = "$missingFile' because it does not exist."
 		Assert-ThrowsContains { New-AzSubscriptionDeploymentStack -Name $rname -Description "A Stack" -TemplateFile StacksSubTemplate.json -TemplateParameterFile $missingFile -Location $location -DenySettingsMode None -ActionOnUnmanage DetachAll -Force } $exceptionMessage
 
-		# --- ParameterObjectTemplateFileParameterSetName ---
+		# --- ParameterObjectTemplateFileParameterSetName (with BypassStackOutOfSyncError) ---
 
 		# Test - Success
-		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -Description "A Stack" -TemplateFile StacksSubTemplate.json -TemplateParameterObject @{policyDefinitionName = "PSCmdletTestPolicy4762"} -Location $location -DenySettingsMode None -ActionOnUnmanage DetachAll -Force
+		$deployment = New-AzSubscriptionDeploymentStack -Name $rname -Description "A Stack" -TemplateFile StacksSubTemplate.json -TemplateParameterObject @{policyDefinitionName = "PSCmdletTestPolicy4762"} -Location $location -DenySettingsMode None -ActionOnUnmanage DetachAll --Force
+		Assert-True $deployment.BypassStackOutOfSyncError
 		Assert-AreEqual "succeeded" $deployment.ProvisioningState
 	}
 

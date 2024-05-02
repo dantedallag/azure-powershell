@@ -886,7 +886,8 @@ namespace Microsoft.Azure.Management.Resources
 
         }
         /// <summary>
-        /// Deletes a Deployment stack by name at Resource Group scope. When operation completes, status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Resource Group scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -1151,7 +1152,8 @@ namespace Microsoft.Azure.Management.Resources
 
         }
         /// <summary>
-        /// Deletes a Deployment stack by name at Subscription scope. When operation completes, status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Subscription scope. When operation
+        /// completes, status code 200 returned without content.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -1438,7 +1440,8 @@ namespace Microsoft.Azure.Management.Resources
 
         }
         /// <summary>
-        /// Deletes a Deployment stack by name at Management Group scope. When operation completes, status code 200 returned without content.
+        /// Deletes a Deployment stack by name at Management Group scope. When
+        /// operation completes, status code 200 returned without content.
         /// </summary>
         /// <param name='managementGroupId'>
         /// Management Group id.
@@ -2142,7 +2145,8 @@ namespace Microsoft.Azure.Management.Resources
 
         }
         /// <summary>
-        /// Runs preflight validation on the Resource Group scoped Deployment stack template to verify its acceptance to Azure Resource Manager.
+        /// Runs preflight validation on the Resource Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
         /// </summary>
         /// <param name='resourceGroupName'>
         /// The name of the resource group. The name is case insensitive.
@@ -2167,7 +2171,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Runs preflight validation on the Subscription scoped Deployment stack template to verify its acceptance to Azure Resource Manager.
+        /// Runs preflight validation on the Subscription scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
         /// </summary>
         /// <param name='deploymentStackName'>
         /// Name of the deployment stack.
@@ -2189,7 +2194,8 @@ namespace Microsoft.Azure.Management.Resources
         }
 
         /// <summary>
-        /// Runs preflight validation on the Management Group scoped Deployment stack template to verify its acceptance to Azure Resource Manager.
+        /// Runs preflight validation on the Management Group scoped Deployment stack
+        /// template to verify its acceptance to Azure Resource Manager.
         /// </summary>
         /// <param name='managementGroupId'>
         /// Management Group id.

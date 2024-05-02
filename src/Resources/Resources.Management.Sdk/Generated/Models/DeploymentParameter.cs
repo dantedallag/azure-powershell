@@ -27,7 +27,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// <param name="value">Input value to the parameter.
         /// </param>
 
-        /// <param name="type">Type of input value.
+        /// <param name="type">Type of the value.
         /// </param>
 
         /// <param name="reference">Azure Key Vault parameter reference.
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         public object Value {get; set; }
 
         /// <summary>
-        /// Gets or sets type of input value.
+        /// Gets or sets type of the value.
         /// </summary>
         [Newtonsoft.Json.JsonProperty(PropertyName = "type")]
         public string Type {get; set; }

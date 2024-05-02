@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Management.Resources.Models
 
         /// <param name="validatedResources">The array of resources that were validated.
         /// </param>
-        public DeploymentStackValidateProperties(ActionOnUnmanage actionOnUnmanage = default(ActionOnUnmanage), string correlationId = default(string), DenySettings denySettings = default(DenySettings), string deploymentScope = default(string), string description = default(string), object parameters = default(object), DeploymentStacksTemplateLink templateLink = default(DeploymentStacksTemplateLink), System.Collections.Generic.IList<ResourceReference> validatedResources = default(System.Collections.Generic.IList<ResourceReference>))
+        public DeploymentStackValidateProperties(ActionOnUnmanage actionOnUnmanage = default(ActionOnUnmanage), string correlationId = default(string), DenySettings denySettings = default(DenySettings), string deploymentScope = default(string), string description = default(string), System.Collections.Generic.IDictionary<string, DeploymentParameter> parameters = default(System.Collections.Generic.IDictionary<string, DeploymentParameter>), DeploymentStacksTemplateLink templateLink = default(DeploymentStacksTemplateLink), System.Collections.Generic.IList<ResourceReference> validatedResources = default(System.Collections.Generic.IList<ResourceReference>))
 
         {
             this.ActionOnUnmanage = actionOnUnmanage;
@@ -105,7 +105,7 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// Gets or sets deployment parameters.
         /// </summary>
         [Newtonsoft.Json.JsonProperty(PropertyName = "parameters")]
-        public object Parameters {get; set; }
+        public System.Collections.Generic.IDictionary<string, DeploymentParameter> Parameters {get; set; }
 
         /// <summary>
         /// Gets or sets the URI of the template.
@@ -137,7 +137,16 @@ namespace Microsoft.Azure.Management.Resources.Models
             }
 
 
-
+            if (this.Parameters != null)
+            {
+                foreach (var valueElement in this.Parameters.Values)
+                {
+                    if (valueElement != null)
+                    {
+                        valueElement.Validate();
+                    }
+                }
+            }
 
 
         }
