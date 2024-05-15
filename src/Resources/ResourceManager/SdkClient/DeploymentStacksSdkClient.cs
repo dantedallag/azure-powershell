@@ -441,7 +441,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 bypassStackOutOfSyncError
                 );
 
-            ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.ResourceGroup, resourceGroupName);
+            ValidateDeploymentStackCreateOrUpdate(deploymentStackModel, deploymentStackName, DeploymentStackScope.ResourceGroup, resourceGroupName);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtResourceGroup(resourceGroupName, deploymentStackName, deploymentStackModel);
             var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.ResourceGroup, rgName: resourceGroupName);
@@ -456,6 +456,52 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 
             HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
+        }
+
+        public PSDeploymentStackValidationError ResourceGroupValidateDeploymentStack(
+           string deploymentStackName,
+           string resourceGroupName,
+           string templateFile,
+           string templateUri,
+           string templateSpec,
+           Hashtable templateObject,
+           string parameterUri,
+           Hashtable parameters,
+           string description,
+           string resourcesCleanupAction,
+           string resourceGroupsCleanupAction,
+           string managementGroupsCleanupAction,
+           string denySettingsMode,
+           string[] denySettingsExcludedPrincipals,
+           string[] denySettingsExcludedActions,
+           bool denySettingsApplyToChildScopes,
+           Hashtable tags,
+           bool bypassStackOutOfSyncError
+           )
+        {
+            // Create Deployment stack deployment model:
+            var deploymentStackModel = CreateDeploymentStackModel(
+                location: null,
+                templateFile,
+                templateUri,
+                templateSpec,
+                templateObject,
+                parameterUri,
+                parameters,
+                description,
+                resourcesCleanupAction,
+                resourceGroupsCleanupAction,
+                managementGroupsCleanupAction,
+                deploymentScope: null,
+                denySettingsMode,
+                denySettingsExcludedPrincipals,
+                denySettingsExcludedActions,
+                denySettingsApplyToChildScopes,
+                tags,
+                bypassStackOutOfSyncError
+                );
+
+            return ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.ResourceGroup, resourceGroupName);
         }
 
         internal void DeleteResourceGroupDeploymentStack(
@@ -548,7 +594,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
                 bypassStackOutOfSyncError
                 );
 
-            ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.Subscription);
+            ValidateDeploymentStackCreateOrUpdate(deploymentStackModel, deploymentStackName, DeploymentStackScope.Subscription);
 
             var deploymentStack = DeploymentStacksClient.DeploymentStacks.BeginCreateOrUpdateAtSubscription(deploymentStackName, deploymentStackModel);
             var getStackFunc = this.GetStackAction(deploymentStackName, DeploymentStackScope.Subscription);
@@ -563,6 +609,53 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 
             HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
+        }
+
+    public PSDeploymentStackValidationError SubscriptionValidateDeploymentStack(
+        string deploymentStackName,
+        string location,
+        string templateFile,
+        string templateUri,
+        string templateSpec,
+        Hashtable templateObject,
+        string parameterUri,
+        Hashtable parameters,
+        string description,
+        string resourcesCleanupAction,
+        string resourceGroupsCleanupAction,
+        string managementGroupsCleanupAction,
+        string deploymentScope,
+        string denySettingsMode,
+        string[] denySettingsExcludedPrincipals,
+        string[] denySettingsExcludedActions,
+        bool denySettingsApplyToChildScopes,
+        Hashtable tags,
+        bool bypassStackOutOfSyncError
+)
+        {
+            // Create Deployment stack deployment model:
+            var deploymentStackModel = CreateDeploymentStackModel(
+                location,
+                templateFile,
+                templateUri,
+                templateSpec,
+                templateObject,
+                parameterUri,
+                parameters,
+                description,
+                resourcesCleanupAction,
+                resourceGroupsCleanupAction,
+                managementGroupsCleanupAction,
+                deploymentScope,
+                denySettingsMode,
+                denySettingsExcludedPrincipals,
+                denySettingsExcludedActions,
+                denySettingsApplyToChildScopes,
+                tags,
+                bypassStackOutOfSyncError
+                );
+
+            return ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.Subscription);
         }
 
         internal void DeleteManagementGroupDeploymentStack(
@@ -653,6 +746,54 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
 
             HandleErrors(finalStack);
             return new PSDeploymentStack(finalStack);
+        }
+
+        public PSDeploymentStackValidationError ManagementGroupValidateDeploymentStack(
+           string deploymentStackName,
+           string managementGroupId,
+           string location,
+           string templateFile,
+           string templateUri,
+           string templateSpec,
+           Hashtable templateObject,
+           string parameterUri,
+           Hashtable parameters,
+           string description,
+           string resourcesCleanupAction,
+           string resourceGroupsCleanupAction,
+           string managementGroupsCleanupAction,
+           string deploymentScope,
+           string denySettingsMode,
+           string[] denySettingsExcludedPrincipals,
+           string[] denySettingsExcludedActions,
+           bool denySettingsApplyToChildScopes,
+           Hashtable tags,
+           bool bypassStackOutOfSyncError
+       )
+        {
+            // Create Deployment stack deployment model:
+            var deploymentStackModel = CreateDeploymentStackModel(
+                location,
+                templateFile,
+                templateUri,
+                templateSpec,
+                templateObject,
+                parameterUri,
+                parameters,
+                description,
+                resourcesCleanupAction,
+                resourceGroupsCleanupAction,
+                managementGroupsCleanupAction,
+                deploymentScope,
+                denySettingsMode,
+                denySettingsExcludedPrincipals,
+                denySettingsExcludedActions,
+                denySettingsApplyToChildScopes,
+                tags,
+                bypassStackOutOfSyncError
+                );
+
+            return ValidateDeploymentStack(deploymentStackModel, deploymentStackName, DeploymentStackScope.ManagementGroup, managementGroupId);
         }
 
         public DeploymentStack CreateDeploymentStackModel(
@@ -921,7 +1062,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             return errorMessages;
         }
 
-        private void ValidateDeploymentStack(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName = "")
+        private PSDeploymentStackValidationInfo ValidateDeploymentStackCreateOrUpdate(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName = "")
         {
             var validationResult = RunDeploymentStackValidation(deploymentStack, deploymentStackName, scope, scopeName);   
 
@@ -942,7 +1083,24 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkClient
             else
             {
                 WriteVerbose(ProjectResources.TemplateValid);
+                
+                return validationResult;
             }
+        }
+
+        private PSDeploymentStackValidationError ValidateDeploymentStack(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName = "")
+        {
+            var validationInfo = RunDeploymentStackValidation(deploymentStack, deploymentStackName, scope, scopeName);
+
+            if (validationInfo.Error == null)
+            {
+                WriteVerbose(ProjectResources.TemplateValid);
+
+                // If valid, return no error.
+                return null;
+            }
+
+            return new PSDeploymentStackValidationError(validationInfo.Error);
         }
 
         private PSDeploymentStackValidationInfo RunDeploymentStackValidation(DeploymentStack deploymentStack, string deploymentStackName, DeploymentStackScope scope, string scopeName)

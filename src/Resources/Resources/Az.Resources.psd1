@@ -12,7 +12,7 @@
 # RootModule = ''
 
 # Version number of this module.
-ModuleVersion = '6.16.2'
+ModuleVersion = '10.0.1'
 
 # Supported PSEditions
 CompatiblePSEditions = 'Core', 'Desktop'
@@ -207,8 +207,9 @@ CmdletsToExport = 'Export-AzResourceGroup', 'Export-AzTemplateSpec',
                'Stop-AzManagementGroupDeployment', 
                'Stop-AzResourceGroupDeployment', 'Stop-AzTenantDeployment', 
                'Test-AzDeployment', 'Test-AzManagementGroupDeployment', 
-               'Test-AzResourceGroupDeployment', 'Test-AzTenantDeployment', 
-               'Unregister-AzProviderFeature', 
+               'Test-AzManagementGroupDeploymentStack', 'Test-AzResourceGroupDeployment', 
+               'Test-AzResourceGroupDeploymentStack', 'Test-AzSubscriptionDeploymentStack',
+               'Test-AzTenantDeployment', 'Unregister-AzProviderFeature', 
                'Unregister-AzProviderPreviewFeature', 
                'Unregister-AzResourceProvider', 'Update-AzManagementGroup', 
                'Update-AzManagementGroupHierarchySetting', 'Update-AzTag'
