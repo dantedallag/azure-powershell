@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.Deployments
 
     public class PSWhatIfOperationResult
     {
-        private readonly WhatIfOperationResult whatIfOperationResult;
+        public WhatIfOperationResult whatIfOperationResult;
 
         private readonly Lazy<IList<PSWhatIfChange>> changes;
 

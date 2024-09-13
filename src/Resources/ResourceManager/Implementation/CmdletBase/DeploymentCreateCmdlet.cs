@@ -15,19 +15,40 @@
 namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.CmdletBase
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Management.Automation;
     using Microsoft.Azure.Commands.Common.Strategies;
+    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Formatters;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.Deployments;
     using Microsoft.Azure.Management.Resources.Models;
+    using System.Collections.Generic;
+    using System.Text.Json;
+    using Newtonsoft.Json;
 
     public abstract class DeploymentCreateCmdlet: DeploymentWhatIfCmdlet
     {
         [Parameter(Mandatory = false, HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
         public string QueryString { get; set; }
+
+
+        // Noise parameters for testing ----------------
+        [Parameter(Mandatory = false)]
+        public SwitchParameter SaveNoise { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public SwitchParameter IngestNoise { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public string NoiseStorageFile { get; set; }
+
+        [Parameter(Mandatory = false)]
+        public string NoiseRemovalResultFile { get; set; }
+
+        // ---------------------------------------------
 
         protected abstract ConfirmImpact ConfirmImpact { get; }
 
@@ -48,6 +69,36 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             if (this.ShouldExecuteWhatIf())
             {
                 PSWhatIfOperationResult whatIfResult = this.ExecuteWhatIf();
+                if (SaveNoise.IsPresent)
+                {
+                    var noise = new Dictionary<string, Dictionary<string, WhatIfPropertyChange>>();
+                    foreach (var change in whatIfResult.whatIfOperationResult.Changes)
+                    {
+                        var deltaMap = new Dictionary<string, WhatIfPropertyChange>();
+                        foreach (var delta in change.Delta)
+                        {
+                            deltaMap[delta.Path] = delta;
+                        }
+                        noise[change.ResourceId] = deltaMap;
+                    }
+                    File.WriteAllText(NoiseStorageFile, JsonConvert.SerializeObject(noise));
+                } 
+                else if (IngestNoise.IsPresent)
+                {
+                    var noise = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, WhatIfPropertyChange>>>(File.ReadAllText(NoiseStorageFile));
+                    foreach (var change in whatIfResult.whatIfOperationResult.Changes)
+                    {
+                        foreach (var delta in change.Delta)
+                        {
+                            if (noise[change.ResourceId]?[delta.Path] != null && noise[change.ResourceId][delta.Path].ToJson() == delta.ToJson())
+                            {
+                                delta.PropertyChangeType = PropertyChangeType.NoEffect;
+                            }
+                        }
+                    }
+                    File.WriteAllText(NoiseRemovalResultFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
+                }
+
                 string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
 
                 if (this.ShouldProcessGivenCurrentConfirmFlagAndPreference() &&
