@@ -28,6 +28,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
     using System.Collections.Generic;
     using System.Text.Json;
     using Newtonsoft.Json;
+    using Newtonsoft.Json.Linq;
 
     public abstract class DeploymentCreateCmdlet: DeploymentWhatIfCmdlet
     {
@@ -69,12 +70,22 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             if (this.ShouldExecuteWhatIf())
             {
                 PSWhatIfOperationResult whatIfResult = this.ExecuteWhatIf();
+                
+                // --------------------------------------------------------------------------------------------------------------------------------------------
+
                 if (SaveNoise.IsPresent)
                 {
                     var noise = new Dictionary<string, Dictionary<string, WhatIfPropertyChange>>();
                     foreach (var change in whatIfResult.whatIfOperationResult.Changes)
                     {
                         var deltaMap = new Dictionary<string, WhatIfPropertyChange>();
+
+                        // If change type resulted in no change (Ignored, NoChange, ect.)
+                        if (change.Delta == null)
+                        {
+                            continue;
+                        }
+
                         foreach (var delta in change.Delta)
                         {
                             deltaMap[delta.Path] = delta;
@@ -86,18 +97,84 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 else if (IngestNoise.IsPresent)
                 {
                     var noise = JsonConvert.DeserializeObject<Dictionary<string, Dictionary<string, WhatIfPropertyChange>>>(File.ReadAllText(NoiseStorageFile));
+                    var newChanges = new List<WhatIfChange>();
+                    
                     foreach (var change in whatIfResult.whatIfOperationResult.Changes)
                     {
-                        foreach (var delta in change.Delta)
+                        // If change type resulted in no change (Ignored, NoChange, ect.)
+                        if (change.Delta == null)
                         {
-                            if (noise[change.ResourceId]?[delta.Path] != null && noise[change.ResourceId][delta.Path].ToJson() == delta.ToJson())
+                            continue;
+                        }
+
+                        var newDelta = new List<WhatIfPropertyChange>();
+
+                        foreach (var deltaEntry in change.Delta)
+                        {
+                            // TODO: Handle children
+
+                            bool isNoise = false;
+
+                            if (noise[change.ResourceId]?[deltaEntry.Path] != null && noise[change.ResourceId][deltaEntry.Path].ToJson() == deltaEntry.ToJson())
                             {
-                                delta.PropertyChangeType = PropertyChangeType.NoEffect;
+
+                                isNoise = true;
+
+                                // Have to account for a list or another object
+
+                                if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                {
+                                    var noisyProperty = change.After.ToJToken();
+                                    string[] splitPath = deltaEntry.Path.Split('.');
+
+                                    foreach (var property in splitPath)
+                                    {
+                                        noisyProperty = noisyProperty[property];
+                                    }
+                                    noisyProperty = deltaEntry.Before.ToJToken();
+                                } 
+                                //else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                //{
+                                //    JToken noisyPropertyParent = change.After.ToJToken();
+                                //    string[] splitPath = deltaEntry.Path.Split('.');
+                                //    string[] steps = splitPath
+
+                                //    foreach (var property in splitPath)
+                                //    {
+                                //        noisyProperty = noisyProperty[property];
+                                //    }
+
+                                //    while (noisyPropertyParent[noisyProperty] != null)
+                                //    {
+                                //        noisyProperty = noisyProperty[];
+                                //    }
+                                //    noisyProperty = deltaEntry.Before.ToJToken();
+
+
+                                //}
+                            }
+
+                            if (!isNoise)
+                            {
+                                newDelta.Add(deltaEntry);
                             }
                         }
+
+                        if (newDelta.Count > 0)
+                        {
+                            change.Delta = newDelta;
+                        }
+                        else
+                        {
+                            change.ChangeType = ChangeType.NoChange;
+                            change.Delta = null;
+                        }
                     }
+
                     File.WriteAllText(NoiseRemovalResultFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
                 }
+
+                // -----------------------------------------------------------------------------------------------------------------------------------------------
 
                 string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
 
