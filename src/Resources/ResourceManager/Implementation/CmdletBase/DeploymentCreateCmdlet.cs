@@ -31,6 +31,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
     using System.Net.Http;
     using System.Text;
     using System.Threading.Tasks;
+    using JsonDiffPatchDotNet;
     using Newtonsoft.Json;
 
     public abstract class DeploymentCreateCmdlet: DeploymentWhatIfCmdlet
@@ -133,7 +134,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                     foreach (var change in whatIfResult.whatIfOperationResult.Changes)
                     {
                         // If change type resulted in no change (Ignored, NoChange, ect.)
-                        if (change.Delta == null)
+                        if (change.Delta == null || !noise.ContainsKey(change.ResourceId))
                         {
                             continue;
                         }
@@ -144,79 +145,65 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                         {
                             bool isNoise = false;
 
-                            if (deltaEntry.PropertyChangeType != PropertyChangeType.Array && deltaEntry.Children != null)
+                            // TODO: May be a better regex to tell if a function exists in an after value:
+                            if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
                             {
-                                throw new Exception("Top level delta has children, but is not an Array! " + deltaEntry.Path);
+                                // If an unevaluated function exists, no way to determine if noise.
+                                break;
                             }
 
-                            // For non-array values, we can directly compare the json of the delta.
-                            if (noise.ContainsKey(change.ResourceId) &&
-                                noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
-                                noise[change.ResourceId][deltaEntry.Path] != null &&
-                                deltaEntry.PropertyChangeType != PropertyChangeType.Array &&
-                                noise[change.ResourceId][deltaEntry.Path].ToJson() == deltaEntry.ToJson())
+                            // Check if noise is possible for given delta on resource id.
+                            if (noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
+                                noise[change.ResourceId][deltaEntry.Path] != null)
                             {
-                                isNoise = true;
-
-                                // Have to account for a list or another object
-
-                                if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                if (deltaEntry.Children.Count == 0)
                                 {
-                                    // TODO: May be a better regex to tell if a function exists in an after value:
-                                    if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
+                                    // Primative Delta
+                                    if (JsonEqualPrimative(noise[change.ResourceId][deltaEntry.Path].ToJToken(), deltaEntry.ToJson()) == false)
                                     {
-                                        // If an unevaluated function exists, no way to determine if noise.
-                                        break;
-                                    }
+                                        isNoise = true;
 
-                                    var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                    var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                    var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+                                        var splitIndex = deltaEntry.Path.LastIndexOf(".");
+                                        var parentPath = deltaEntry.Path.Substring(0, splitIndex);
+                                        var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
 
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
-                                }
-                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
-                                {
+                                        if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                        {
 
-                                    var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                    var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                    var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
-
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
-                                }
-                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
-                                {
-                                    // TODO: Handle Create
-                                    // TODO: May be a better regex to tell if a function exists in an after value:
-                                    if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
-                                    {
-                                        // If an unevaluated function exists, no way to determine if noise.
-                                        break;
+                                            ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                        }
+                                        else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                        {
+                                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
+                                        }
+                                        else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
+                                        { 
+                                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                        }
                                     }
                                 }
-                            }
-                            // Special case for array values. If an array value for resource type exists in noise, we need to handle how to compare.
-                            else if (noise.ContainsKey(change.ResourceId) &&
-                                noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
-                                noise[change.ResourceId][deltaEntry.Path] != null &&
-                                deltaEntry.PropertyChangeType == PropertyChangeType.Array)
-                            { 
-                                var noiseEntryJToken = noise[change.ResourceId][deltaEntry.Path].ToJToken();
-                                var deltaEntryJToken = deltaEntry.ToJToken();
-
-                                var match = JsonDiff(httpClient, deltaEntryJToken, noiseEntryJToken).GetAwaiter().GetResult();
-
-                                if (match)
+                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Array)
                                 {
-                                    isNoise = true;
+                                    // (Case 2): Array Delta
+                                    // Note: A top level Object Delta will never exist. It will be broken down into primitives on deployments` side.
+                                    // There could still be nested objects within the array though that will have to be accounted for.
+                                    var noiseEntryJToken = noise[change.ResourceId][deltaEntry.Path].ToJToken();
+                                    var deltaEntryJToken = deltaEntry.ToJToken();
 
-                                    var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                    var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                    var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+                                    //var match = JsonDiffAsync(httpClient, deltaEntryJToken, noiseEntryJToken).GetAwaiter().GetResult();
+                                    var match = JsonEqualArray(deltaEntryJToken, noiseEntryJToken);
 
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                    if (match)
+                                    {
+                                        isNoise = true;
+
+                                        var splitIndex = deltaEntry.Path.LastIndexOf(".");
+                                        var parentPath = deltaEntry.Path.Substring(0, splitIndex);
+                                        var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                    }
                                 }
-
                             }
 
                             if (!isNoise)
@@ -236,7 +223,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                         }
                     }
 
-                    File.WriteAllText(NoiseRemovalResultFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
+                    if (NoiseRemovalResultFile != null)
+                    {
+                        File.WriteAllText(NoiseRemovalResultFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
+                    }
                 }
 
                 // -----------------------------------------------------------------------------------------------------------------------------------------------
@@ -341,20 +331,41 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             return base.GetDynamicParameters();
         }
 
-        private async Task<bool> JsonDiff(HttpClient httpClient, object result, object noise)
+        //private async Task<bool> JsonDiffAsync(HttpClient httpClient, object result, object noise)
+        //{
+        //    var content = new StringContent(JsonConvert.SerializeObject(new
+        //    {
+        //        left = result,
+        //        right = noise
+        //    }),
+        //    Encoding.UTF8,
+        //    "application/json");
+
+        //    HttpResponseMessage response = await httpClient.PostAsync("http://127.0.0.1:3000/diff", content);
+
+        //    var jsonResponse = await response.Content.ReadAsStringAsync();
+        //    return jsonResponse == "true" ? true : false;
+        //}
+
+        private bool JsonEqualPrimative(JToken result, JToken noise)
         {
-            var content = new StringContent(JsonConvert.SerializeObject(new
-            {
-                left = result,
-                right = noise
-            }),
-            Encoding.UTF8,
-            "application/json");
+            JsonDiffPatch patch = new JsonDiffPatch();
 
-            HttpResponseMessage response = await httpClient.PostAsync("http://127.0.0.1:3000/diff", content);
+            return patch.Diff(result, noise) == null;
+        }
 
-            var jsonResponse = await response.Content.ReadAsStringAsync();
-            return jsonResponse == "true" ? true : false;
+        private bool JsonEqualObject(JToken result, JToken noise)
+        {
+            JsonDiffPatch patch = new JsonDiffPatch();
+
+            return patch.Diff(result, noise) == null;
+        }
+
+        private bool JsonEqualArray(JToken result, JToken noise)
+        {
+            JsonDiffPatch patch = new JsonDiffPatch();
+
+            return patch.Diff(result, noise) == null;
         }
     }
 }
