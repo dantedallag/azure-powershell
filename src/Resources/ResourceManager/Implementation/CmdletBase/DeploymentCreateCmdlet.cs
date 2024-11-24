@@ -39,26 +39,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         [Parameter(Mandatory = false, HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
         public string QueryString { get; set; }
 
-        // Noise parameters for testing ----------------
-        [Parameter(Mandatory = false)]
-        public SwitchParameter SaveNoise { get; set; }
-
-        [Parameter(Mandatory = false)]
-        public SwitchParameter IngestNoise { get; set; }
-
-        // Simulates the DB where noise will be kept.
+        // File to write adjusted whatif result.
         [Parameter(Mandatory = false)]
         public string NoiseStorageFile { get; set; }
 
-        // File to write adjusted whatif result.
-        [Parameter(Mandatory = false)]
-        public string NoiseRemovalResultFile { get; set; }
-
-        // File tp write full whatif result.
-        [Parameter(Mandatory = false)]
-        public string RawOutputFile { get; set; }
-
         // ---------------------------------------------
+        [Parameter(Mandatory = false, HelpMessage = "Temporary parameter for noise reduction POC that returns the whatif object directly, instead of processing it.")]
+        public SwitchParameter WhatIfOverrideObjectReturn { get; set; }
 
         protected abstract ConfirmImpact ConfirmImpact { get; }
 
@@ -233,6 +220,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
                 string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
 
+                if (this.WhatIfOverrideObjectReturn.IsPresent)
+                {
+                    this.WriteObject(whatIfResult);
+                    return;
+                }
+
+                string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
                 if (this.ShouldProcessGivenCurrentConfirmFlagAndPreference() &&
                     this.ShouldSkipConfirmationIfNoChange() &&
                     whatIfResult.Changes.All(x => x.ChangeType == ChangeType.NoChange || x.ChangeType == ChangeType.Ignore))
