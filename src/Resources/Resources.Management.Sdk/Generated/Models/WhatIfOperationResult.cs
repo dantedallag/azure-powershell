@@ -85,6 +85,6 @@ namespace Microsoft.Azure.Management.Resources.Models
         /// Gets list of resource diagnostics detected by What-If operation.
         /// </summary>
         [Newtonsoft.Json.JsonProperty(PropertyName = "properties.diagnostics")]
-        public System.Collections.Generic.IList<DeploymentDiagnosticsDefinition> Diagnostics {get; private set; }
+        public System.Collections.Generic.IList<DeploymentDiagnosticsDefinition> Diagnostics {get; set; }
     }
 }

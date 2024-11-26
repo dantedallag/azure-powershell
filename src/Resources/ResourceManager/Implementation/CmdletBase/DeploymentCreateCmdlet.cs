@@ -33,19 +33,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
     using System.Threading.Tasks;
     using JsonDiffPatchDotNet;
     using Newtonsoft.Json;
+    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.NewSdkExtensions;
+    using System.Collections;
 
     public abstract class DeploymentCreateCmdlet: DeploymentWhatIfCmdlet
     {
         [Parameter(Mandatory = false, HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
         public string QueryString { get; set; }
-
-        // File to write adjusted whatif result.
-        [Parameter(Mandatory = false)]
-        public string NoiseStorageFile { get; set; }
-
-        // ---------------------------------------------
-        [Parameter(Mandatory = false, HelpMessage = "Temporary parameter for noise reduction POC that returns the whatif object directly, instead of processing it.")]
-        public SwitchParameter WhatIfOverrideObjectReturn { get; set; }
 
         protected abstract ConfirmImpact ConfirmImpact { get; }
 
@@ -66,165 +60,104 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             if (this.ShouldExecuteWhatIf())
             {
                 PSWhatIfOperationResult whatIfResult = this.ExecuteWhatIf();
-                HttpClient httpClient = new HttpClient();
 
-                // --------------------------------------------------------------------------------------------------------------------------------------------
+                // -----------------------------------------------------------------------------------------------------------------------------------------------
 
-                if (SaveNoise.IsPresent)
+                // Only run POC code if what if succeeded
+                if (whatIfResult.Error == null && whatIfResult.Status == "Succeeded")
                 {
-                    if (RawOutputFile != null)
+                    if (Poc1WhatIf.IsPresent)
                     {
-                        File.WriteAllText(RawOutputFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
-                    }
-
-                    var noise = new Dictionary<string, Dictionary<string, WhatIfPropertyChange>>();
-                    foreach (var change in whatIfResult.whatIfOperationResult.Changes)
-                    {
-                        var deltaMap = new Dictionary<string, WhatIfPropertyChange>();
-
-                        // If change type resulted in no change (Ignored, NoChange, ect.)
-                        if (change.Delta == null || change.Delta.Count == 0)
+                        // Ensure only 1 step is being handeled per call.
+                        if (!(Poc1SaveNoise.IsPresent || Poc1IngestNoise.IsPresent) || (Poc1SaveNoise.IsPresent && Poc1IngestNoise.IsPresent))
                         {
-                            continue;
+                            throw new Exception("Must have only 1 of Poc1SaveNoise and Poc1IngestNoise set when running Poc1WhatIf.");
+                        }
+                        // Ensure storage file path is provided.
+                        if (Poc1NoiseStorageFile == null || Poc1NoiseStorageFile == "")
+                        {
+                            throw new Exception("The Poc1StorageFile parameter cannot be empty when running Poc1WhatIf.");
                         }
 
-                        foreach (var delta in change.Delta)
+
+                        var whatIfOperationResult = whatIfResult.whatIfOperationResult;
+                        whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
+                        whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
+
+                        // Handle requested step.
+                        if (Poc1SaveNoise.IsPresent)
                         {
-                            deltaMap[delta.Path] = delta;
+                            SaveNoise(whatIfOperationResult.Changes, Poc1NoiseStorageFile);
+                            this.WriteDebug("Saved Noise file!");
                         }
-                        noise[change.ResourceId] = deltaMap;
-                    }
-
-                    JsonSerializer serializer = new JsonSerializer();
-                    using (StreamWriter sw = new StreamWriter(NoiseStorageFile))
-                    using (JsonWriter writer = new JsonTextWriter(sw))
-                    {
-                        serializer.Serialize(writer, noise);
-                    }
-                }
-                else if (IngestNoise.IsPresent)
-                {
-                    if (RawOutputFile != null)
-                    {
-                        File.WriteAllText(RawOutputFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
-                    }
-
-                    Dictionary<string, Dictionary<string, WhatIfPropertyChange>> noise;
-                    JsonSerializer serializer = new JsonSerializer();
-                    using (StreamReader sr = new StreamReader(NoiseStorageFile))
-                    using (JsonReader reader = new JsonTextReader(sr))
-                    {
-                        noise = serializer.Deserialize<Dictionary<string, Dictionary<string, WhatIfPropertyChange>>>(reader);
-                    }
-                    var newChanges = new List<WhatIfChange>();
-
-                    foreach (var change in whatIfResult.whatIfOperationResult.Changes)
-                    {
-                        // If change type resulted in no change (Ignored, NoChange, ect.)
-                        if (change.Delta == null || !noise.ContainsKey(change.ResourceId))
+                        else if (Poc1IngestNoise.IsPresent)
                         {
-                            continue;
+                            IngestNoise(whatIfOperationResult.Changes, Poc1NoiseStorageFile, Poc1UseDiffServer.IsPresent);
                         }
+                    }
+                    else if (Poc2WhatIf.IsPresent)
+                    {
+                        // Mark all resource parameters that are explictly defined in the template.
+                        var marked = new Dictionary<string, bool>();
+                        var resources = this.TemplateObject["resources"].ToJToken();
 
-                        var newDelta = new List<WhatIfPropertyChange>();
+                        var whatIfOperationResult = whatIfResult.whatIfOperationResult;
+                        whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
+                        whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
 
-                        foreach (var deltaEntry in change.Delta)
-                        {
-                            bool isNoise = false;
+                        foreach (var resource in resources) {
+                            var resourceProperties = resource["properties"];
+                            var resourceName = resource["name"].ToString();
+                            var resourceType = resource["type"].ToString();
 
-                            // TODO: May be a better regex to tell if a function exists in an after value:
-                            if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
+                            // Handle functions.
+                            if (resourceName.Contains("["))
                             {
-                                // If an unevaluated function exists, no way to determine if noise.
-                                break;
+                                resourceName = HandleFunctionInName(resourceName);
                             }
 
-                            // Check if noise is possible for given delta on resource id.
-                            if (noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
-                                noise[change.ResourceId][deltaEntry.Path] != null)
+                            // Mark the resource as a whole in case resources are implictly created. We don't want to include implicitly created
+                            // resources, even if there were no changes.
+                            marked[resourceName] = true;
+
+                            MarkProperties(resourceProperties, resourceName, marked);
+
+                            // TODO: This presents an interesting prediciment where resources with NoChange may need to be per property?
+                            // For now if a resource has no change, but is not part of the template, we are going to remove it.
+
+                            var updatedChanges = new List<WhatIfChange>();
+
+                            foreach (var change in whatIfOperationResult.Changes)
                             {
-                                if (deltaEntry.Children.Count == 0)
+                                // Grab resource name from id.
+                                var changeResourceName = change.ResourceId.Split('/').Last();
+
+                                // Handle no change resources. For this POC, remove a NoChange resource if the resource was not part of the deployment.
+                                // Otherwise, keep NoChange, which the assumption that it only considers properties explictly set on resource.
+                                if (change.Delta == null)
                                 {
-                                    // Primative Delta
-                                    if (JsonEqualPrimative(noise[change.ResourceId][deltaEntry.Path].ToJToken(), deltaEntry.ToJson()) == false)
+                                    if (marked.ContainsKey(changeResourceName))
                                     {
-                                        isNoise = true;
-
-                                        var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                        var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                        var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
-
-                                        if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
-                                        {
-
-                                            ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
-                                        }
-                                        else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
-                                        {
-                                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
-                                        }
-                                        else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
-                                        { 
-                                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
-                                        }
+                                        updatedChanges.Add(change);
                                     }
+
+                                    continue;
                                 }
-                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Array)
+
+                                var newDelta = new List<WhatIfPropertyChange>();
+                                foreach (var delta in change.Delta)
                                 {
-                                    // (Case 2): Array Delta
-                                    // Note: A top level Object Delta will never exist. It will be broken down into primitives on deployments` side.
-                                    // There could still be nested objects within the array though that will have to be accounted for.
-                                    var noiseEntryJToken = noise[change.ResourceId][deltaEntry.Path].ToJToken();
-                                    var deltaEntryJToken = deltaEntry.ToJToken();
-
-                                    //var match = JsonDiffAsync(httpClient, deltaEntryJToken, noiseEntryJToken).GetAwaiter().GetResult();
-                                    var match = JsonEqualArray(deltaEntryJToken, noiseEntryJToken);
-
-                                    if (match)
+                                    if (marked.ContainsKey(changeResourceName + "." + delta.Path))
                                     {
-                                        isNoise = true;
-
-                                        var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                        var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                        var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
-
-                                        ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                        newDelta.Add(delta);
                                     }
                                 }
                             }
-
-                            if (!isNoise)
-                            {
-                                newDelta.Add(deltaEntry);
-                            }
                         }
-
-                        if (newDelta.Count > 0)
-                        {
-                            change.Delta = newDelta;
-                        }
-                        else
-                        {
-                            change.ChangeType = ChangeType.NoChange;
-                            change.Delta = null;
-                        }
-                    }
-
-                    if (NoiseRemovalResultFile != null)
-                    {
-                        File.WriteAllText(NoiseRemovalResultFile, whatIfResult.whatIfOperationResult.ToFormattedJson());
                     }
                 }
 
                 // -----------------------------------------------------------------------------------------------------------------------------------------------
-
-                string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
-
-                if (this.WhatIfOverrideObjectReturn.IsPresent)
-                {
-                    this.WriteObject(whatIfResult);
-                    return;
-                }
 
                 string whatIfFormattedOutput = WhatIfOperationResultFormatter.Format(whatIfResult);
                 if (this.ShouldProcessGivenCurrentConfirmFlagAndPreference() &&
@@ -324,22 +257,188 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             }
             return base.GetDynamicParameters();
         }
+        // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------ Temporary Code for POC1 ----------------------------------------------------------------------------
 
-        //private async Task<bool> JsonDiffAsync(HttpClient httpClient, object result, object noise)
-        //{
-        //    var content = new StringContent(JsonConvert.SerializeObject(new
-        //    {
-        //        left = result,
-        //        right = noise
-        //    }),
-        //    Encoding.UTF8,
-        //    "application/json");
+        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC1 noise reduction if whatif flag is also provided.")]
+        public SwitchParameter Poc1WhatIf { get; set; }
 
-        //    HttpResponseMessage response = await httpClient.PostAsync("http://127.0.0.1:3000/diff", content);
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC1 noise reduction, or the saving of the noise to an external file (db).")]
+        public SwitchParameter Poc1SaveNoise  { get; set; }
 
-        //    var jsonResponse = await response.Content.ReadAsStringAsync();
-        //    return jsonResponse == "true" ? true : false;
-        //}
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC1 noise reduction, or the loading of the noise to an external file (db) and canceling out of said noise.\"")]
+        public SwitchParameter Poc1IngestNoise { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Switch for POC1 implementation to choose javascript server to handle json diffs.")]
+        public SwitchParameter Poc1UseDiffServer { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "File to save noise to.")]
+        public string Poc1NoiseStorageFile { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC2 noise reduction if whatif flag is also provided.")]
+        public SwitchParameter Poc2WhatIf { get; set; }
+
+        //[Parameter(Mandatory = false, HelpMessage = "Temporary parameter for noise reduction POC that returns the whatif object directly, instead of processing it.")]
+        //public SwitchParameter WhatIfOverrideObjectReturn { get; set; }
+
+        private void SaveNoise(IList<WhatIfChange> changes, string noiseStorageFile)
+        {
+            var noise = new Dictionary<string, Dictionary<string, WhatIfPropertyChange>>();
+            foreach (var change in changes)
+            {
+                var deltaMap = new Dictionary<string, WhatIfPropertyChange>();
+
+                // If change type resulted in no change (Ignored, NoChange, ect.)
+                if (change.Delta == null || change.Delta.Count == 0)
+                {
+                    continue;
+                }
+
+                foreach (var delta in change.Delta)
+                {
+                    deltaMap[delta.Path] = delta;
+                }
+                noise[change.ResourceId] = deltaMap;
+            }
+
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamWriter sw = new StreamWriter(noiseStorageFile))
+            using (JsonWriter writer = new JsonTextWriter(sw))
+            {
+                serializer.Serialize(writer, noise);
+            }
+        }
+
+        private void IngestNoise(IList<WhatIfChange> changes, string noiseStorageFile, bool useDiffServer)
+        {
+            // Read in the noise.
+            Dictionary<string, Dictionary<string, WhatIfPropertyChange>> noise;
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamReader sr = new StreamReader(noiseStorageFile))
+            using (JsonReader reader = new JsonTextReader(sr))
+            {
+                noise = serializer.Deserialize<Dictionary<string, Dictionary<string, WhatIfPropertyChange>>>(reader);
+            }
+
+            HttpClient httpClient = useDiffServer ? new HttpClient() : null;
+
+            foreach (var change in changes)
+            {
+                // If change type resulted in no change (Ignored, NoChange, ect.)
+                if (change.Delta == null || !noise.ContainsKey(change.ResourceId))
+                {
+                    continue;
+                }
+
+                var newDelta = new List<WhatIfPropertyChange>();
+
+                foreach (var deltaEntry in change.Delta)
+                {
+                    bool isNoise = false;
+
+                    // TODO: May be a better regex to tell if a function exists in an after value:
+                    if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
+                    {
+                        // If an unevaluated function exists, no way to determine if noise.
+                        break;
+                    }
+
+                    // Check if noise is possible for given delta on resource id.
+                    if (noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
+                        noise[change.ResourceId][deltaEntry.Path] != null)
+                    {
+                        if (deltaEntry.Children.Count == 0)
+                        {
+                            // Case 1: Primative Delta
+                            if (JsonEqualPrimative(noise[change.ResourceId][deltaEntry.Path].ToJToken(), deltaEntry.ToJson()) == false)
+                            {
+                                isNoise = true;
+
+                                var splitIndex = deltaEntry.Path.LastIndexOf(".");
+                                var parentPath = deltaEntry.Path.Substring(0, splitIndex);
+                                var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+
+                                if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                {
+                                    ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                }
+                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                {
+                                    ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
+                                }
+                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
+                                {
+                                    ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                }
+                            }
+                        }
+                        else if (deltaEntry.PropertyChangeType == PropertyChangeType.Array)
+                        {
+                            // Case 2: Array Delta
+                            // Note: A top level Object Delta will never exist. It will be broken down into primitives on deployments` side.
+                            // There could still be nested objects within the array though that will have to be accounted for.
+                            var noiseEntryJToken = noise[change.ResourceId][deltaEntry.Path].ToJToken();
+                            var deltaEntryJToken = deltaEntry.ToJToken();
+
+                            // Run diff on array in server if boolean is provided.
+                            bool match;
+                            if (useDiffServer)
+                            {
+                                match = JsonDiffArrayAsync(httpClient, deltaEntryJToken, noiseEntryJToken).GetAwaiter().GetResult();
+                            }
+                            else
+                            {
+                                match = JsonDiffArray(deltaEntryJToken, noiseEntryJToken);
+                            }
+
+                            if (match)
+                            {
+                                isNoise = true;
+
+                                var splitIndex = deltaEntry.Path.LastIndexOf(".");
+                                var parentPath = deltaEntry.Path.Substring(0, splitIndex);
+                                var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+
+                                // TODO: Handle Arrays better when internal things change
+
+                                ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                            }
+                        }
+                    }
+
+                    if (!isNoise)
+                    {
+                        newDelta.Add(deltaEntry);
+                    }
+                }
+
+                if (newDelta.Count > 0)
+                {
+                    change.Delta = newDelta;
+                }
+                else
+                {
+                    change.ChangeType = ChangeType.NoChange;
+                    change.Delta = null;
+                }
+            }
+        }
+
+        private async Task<bool> JsonDiffArrayAsync(HttpClient httpClient, object result, object noise)
+        {
+            var content = new StringContent(JsonConvert.SerializeObject(new
+            {
+                left = result,
+                right = noise
+            }),
+            Encoding.UTF8,
+            "application/json");
+
+            HttpResponseMessage response = await httpClient.PostAsync("http://127.0.0.1:3000/diff", content);
+
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            return jsonResponse == "true" ? true : false;
+        }
 
         private bool JsonEqualPrimative(JToken result, JToken noise)
         {
@@ -348,18 +447,55 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             return patch.Diff(result, noise) == null;
         }
 
-        private bool JsonEqualObject(JToken result, JToken noise)
+        private bool JsonDiffArray(JToken result, JToken noise)
         {
             JsonDiffPatch patch = new JsonDiffPatch();
 
             return patch.Diff(result, noise) == null;
         }
 
-        private bool JsonEqualArray(JToken result, JToken noise)
+        // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------ Temporary Code for POC2 ----------------------------------------------------------------------------
+    
+        private string HandleFunctionInName(string resourceName)
         {
-            JsonDiffPatch patch = new JsonDiffPatch();
+            // Process template parameters that are strings for resource name replacemaent.
+            var templateParameters = this.GetTemplateParameterObject();
 
-            return patch.Diff(result, noise) == null;
+            resourceName = resourceName.Split('[')[1].Split(']')[0];
+
+            while (resourceName.Contains("parameters("))
+            {
+                var parameterName = resourceName.Replace("parameters(", "*").Split('*')[1].Split(')')[0].Replace("'", "");
+                var parameterValue = ((Hashtable) templateParameters[parameterName])["value"];
+                resourceName = resourceName.Replace("parameters('" + parameterName + "')", (string)parameterValue);
+            }
+
+            // Handle resource name with format.
+            if (resourceName.Contains("format("))
+            {
+                var formatParameters = resourceName.Replace("format(", "*").Split('*')[1].Split(')')[0].Replace("'", "").Split(',');
+                resourceName = string.Format(formatParameters[0], formatParameters[1].TrimStart(' '), formatParameters[2].TrimStart(' '));
+            }
+
+            return resourceName;
+        }
+
+
+        private void MarkProperties(JToken currentToken, string resourceName, IDictionary<string, bool> marked)
+        {
+            if (currentToken.IsLeaf())
+            {
+                marked.Add(resourceName + "." + currentToken.Path.Substring(4), true);
+                return;
+            }
+
+            foreach (var childToken in currentToken)
+            {
+                var pathSplit = childToken.Path.ToString().Split('.');
+                var childTokenName = pathSplit[pathSplit.Length - 1];
+                MarkProperties(childToken, resourceName, marked);
+            }
         }
     }
 }
