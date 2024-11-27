@@ -35,8 +35,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
     using Newtonsoft.Json;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.NewSdkExtensions;
     using System.Collections;
+    using System.ComponentModel;
 
-    public abstract class DeploymentCreateCmdlet: DeploymentWhatIfCmdlet
+    public abstract class DeploymentCreateCmdlet : DeploymentWhatIfCmdlet
     {
         [Parameter(Mandatory = false, HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
         public string QueryString { get; set; }
@@ -68,7 +69,24 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 {
                     if (Poc1WhatIf.IsPresent)
                     {
-                        // Ensure only 1 step is being handeled per call.
+                        /***
+                         * POC 1 will work in 2 steps: Saving noise and Ingesting noise. 
+                         * 
+                         * Saving the noise will run whatif and save changes to an external file.
+                         * 
+                         * Ingesting the noise will run whatif. It will then load the json from the external file and
+                         * remove relevant changes.
+                         * 
+                         * Considerations:
+                         * - Treats array changes as a single unit, as in it only removes a top level array as noise if the
+                         * array matches exactly. There are also 2 ways to diff an array: using the .NET json diff library (which
+                         * is what whatif uses internally) or use the external JS server that runs a more feature rich version of the
+                         * the same libarary. Essentially, it diffs arrays more intelligently, accounting for order of elemenets. To 
+                         * implement smarter noise removal of array elements, work needs to be done.
+                         * 
+                         */
+
+                        // Ensure only one step is being handeled per call. Poc1 requires 2 invocations of the cmdelt.
                         if (!(Poc1SaveNoise.IsPresent || Poc1IngestNoise.IsPresent) || (Poc1SaveNoise.IsPresent && Poc1IngestNoise.IsPresent))
                         {
                             throw new Exception("Must have only 1 of Poc1SaveNoise and Poc1IngestNoise set when running Poc1WhatIf.");
@@ -79,33 +97,59 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                             throw new Exception("The Poc1StorageFile parameter cannot be empty when running Poc1WhatIf.");
                         }
 
-
                         var whatIfOperationResult = whatIfResult.whatIfOperationResult;
+
+                        // Clear these two lists as they are not relevant. Newer feature, so we don't want to create confusion.
                         whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
                         whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
 
-                        // Handle requested step.
                         if (Poc1SaveNoise.IsPresent)
                         {
+                            // Save noise to provided file.
                             SaveNoise(whatIfOperationResult.Changes, Poc1NoiseStorageFile);
                             this.WriteDebug("Saved Noise file!");
                         }
                         else if (Poc1IngestNoise.IsPresent)
                         {
+                            // Read noise and remove relevant noise from whatIfOperationResult.
                             IngestNoise(whatIfOperationResult.Changes, Poc1NoiseStorageFile, Poc1UseDiffServer.IsPresent);
                         }
                     }
                     else if (Poc2WhatIf.IsPresent)
                     {
+                        /***
+                         * POC 2 will work with a single step: removing everything from the whatif response that is not 
+                         * explictly defined in the template.
+                         * 
+                         * All resources and resource properties will be marked in a Dictionary and the whatif response will
+                         * be checked against that dictionary. If there is nothing marked in the dictionary, the property (or 
+                         * complete resource) will be removed.
+                         * 
+                         * Considerations:
+                         * - Resources with changes unrelated to the explictly defined properties will show up as NoChange.
+                         * - Properties are "marked" with their resource name (as much can be extracted) + there json path in
+                         * the template. This means that resource of different types cannot be named the same thing. This becomes
+                         * a lot less complex when it is running internally in deployments.
+                         * - Array values are treated as single entities. As with option 1, this can be improved upon, though the way
+                         * we improve it this way may have to be thought of more.
+                         * - Resource names can't really handle many functions as we have to extract them to keep track of marked resources.
+                         */
+
+
                         // Mark all resource parameters that are explictly defined in the template.
                         var marked = new Dictionary<string, bool>();
                         var resources = this.TemplateObject["resources"].ToJToken();
 
                         var whatIfOperationResult = whatIfResult.whatIfOperationResult;
+
+                        // Clear these two lists as they are not relevant. Newer feature, so we don't want to create confusion.
                         whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
                         whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
 
-                        foreach (var resource in resources) {
+                        // Go through each resource in the template and mark both the overall resource and each property path
+                        // as explictly being defined.
+                        foreach (var resource in resources)
+                        {
                             var resourceProperties = resource["properties"];
                             var resourceName = resource["name"].ToString();
                             var resourceType = resource["type"].ToString();
@@ -121,39 +165,66 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                             marked[resourceName] = true;
 
                             MarkProperties(resourceProperties, resourceName, marked);
+                        }
 
-                            // TODO: This presents an interesting prediciment where resources with NoChange may need to be per property?
-                            // For now if a resource has no change, but is not part of the template, we are going to remove it.
+                        var updatedChanges = new List<WhatIfChange>();
 
-                            var updatedChanges = new List<WhatIfChange>();
+                        foreach (var change in whatIfOperationResult.Changes)
+                        {
+                            // Grab resource name from id.
+                            var changeResourceName = change.ResourceId.Split('/').Last();
 
-                            foreach (var change in whatIfOperationResult.Changes)
+                            // Handle no change resources. For this POC, remove a NoChange resource if the resource was not part of the deployment.
+                            // Otherwise, keep NoChange, which the assumption that it only considers properties explictly set on resource.
+                            if (change.Delta == null || change.Delta.Count == 0)
                             {
-                                // Grab resource name from id.
-                                var changeResourceName = change.ResourceId.Split('/').Last();
-
-                                // Handle no change resources. For this POC, remove a NoChange resource if the resource was not part of the deployment.
-                                // Otherwise, keep NoChange, which the assumption that it only considers properties explictly set on resource.
-                                if (change.Delta == null)
+                                if (marked.ContainsKey(changeResourceName))
                                 {
-                                    if (marked.ContainsKey(changeResourceName))
-                                    {
-                                        updatedChanges.Add(change);
-                                    }
-
-                                    continue;
+                                    updatedChanges.Add(change);
                                 }
 
-                                var newDelta = new List<WhatIfPropertyChange>();
-                                foreach (var delta in change.Delta)
+                                continue;
+                            }
+
+                            var newDelta = new List<WhatIfPropertyChange>();
+                            foreach (var delta in change.Delta)
+                            {
+                                if (marked.ContainsKey(changeResourceName + "." + delta.Path))
                                 {
-                                    if (marked.ContainsKey(changeResourceName + "." + delta.Path))
+                                    newDelta.Add(delta);
+                                }
+                                else
+                                {
+                                    // Remove delta changes from change before and after.
+                                    var splitIndex = delta.Path.LastIndexOf(".");
+                                    var parentPath = delta.Path.Substring(0, splitIndex);
+                                    var noisyProperty = delta.Path.Substring(splitIndex + 1);
+
+                                    if (delta.PropertyChangeType == PropertyChangeType.Modify || delta.PropertyChangeType == PropertyChangeType.NoEffect || delta.PropertyChangeType == PropertyChangeType.Array)
                                     {
-                                        newDelta.Add(delta);
+
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                    }
+                                    else if (delta.PropertyChangeType == PropertyChangeType.Delete)
+                                    {
+                                        ((JObject)((JObject)change.Before).SelectToken(parentPath)).Remove(noisyProperty);
+                                    }
+                                    else if (delta.PropertyChangeType == PropertyChangeType.Create)
+                                    {
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
                                     }
                                 }
                             }
+
+                            if (newDelta.Count > 0)
+                            {
+                                change.Delta = newDelta;
+                                updatedChanges.Add(change);
+                            }
                         }
+
+                        whatIfOperationResult.Changes = updatedChanges;
                     }
                 }
 
@@ -250,7 +321,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         {
             if (!string.IsNullOrEmpty(QueryString))
             {
-                if(QueryString.Substring(0,1) == "?")
+                if (QueryString.Substring(0, 1) == "?")
                     protectedTemplateUri = TemplateUri + QueryString;
                 else
                     protectedTemplateUri = TemplateUri + "?" + QueryString;
@@ -264,7 +335,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         public SwitchParameter Poc1WhatIf { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC1 noise reduction, or the saving of the noise to an external file (db).")]
-        public SwitchParameter Poc1SaveNoise  { get; set; }
+        public SwitchParameter Poc1SaveNoise { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC1 noise reduction, or the loading of the noise to an external file (db) and canceling out of said noise.\"")]
         public SwitchParameter Poc1IngestNoise { get; set; }
@@ -320,6 +391,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 noise = serializer.Deserialize<Dictionary<string, Dictionary<string, WhatIfPropertyChange>>>(reader);
             }
 
+            // Initialize httpClient if using for array diff server.
             HttpClient httpClient = useDiffServer ? new HttpClient() : null;
 
             foreach (var change in changes)
@@ -336,7 +408,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 {
                     bool isNoise = false;
 
-                    // TODO: May be a better regex to tell if a function exists in an after value:
+                    // If function exists in After, skip.
                     if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
                     {
                         // If an unevaluated function exists, no way to determine if noise.
@@ -399,15 +471,20 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                                 var parentPath = deltaEntry.Path.Substring(0, splitIndex);
                                 var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
 
-                                // TODO: Handle Arrays better when internal things change
-
+                                // TODO: Handle Arrays better.
                                 ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
                             }
+                        }
+                        else
+                        {
+                            // No other property change types should be encountered as whatif breaks objects down into primatives.
+                            throw new Exception("PropertyChangeType of " + deltaEntry.PropertyChangeType.ToString() + " not supported.");
                         }
                     }
 
                     if (!isNoise)
                     {
+                        // Valid changes get added added to new delta list.
                         newDelta.Add(deltaEntry);
                     }
                 }
@@ -418,6 +495,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 }
                 else
                 {
+                    // All deltas were removed as noise, so NoChange.
                     change.ChangeType = ChangeType.NoChange;
                     change.Delta = null;
                 }
@@ -456,7 +534,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //------------------------------------------------------------------ Temporary Code for POC2 ----------------------------------------------------------------------------
-    
+
         private string HandleFunctionInName(string resourceName)
         {
             // Process template parameters that are strings for resource name replacemaent.
@@ -467,15 +545,16 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             while (resourceName.Contains("parameters("))
             {
                 var parameterName = resourceName.Replace("parameters(", "*").Split('*')[1].Split(')')[0].Replace("'", "");
-                var parameterValue = ((Hashtable) templateParameters[parameterName])["value"];
+                var parameterValue = ((Hashtable)templateParameters[parameterName])["value"];
                 resourceName = resourceName.Replace("parameters('" + parameterName + "')", (string)parameterValue);
             }
 
             // Handle resource name with format.
             if (resourceName.Contains("format("))
             {
+                // TODO: Better handling of format (like allowing more than two arguments.
                 var formatParameters = resourceName.Replace("format(", "*").Split('*')[1].Split(')')[0].Replace("'", "").Split(',');
-                resourceName = string.Format(formatParameters[0], formatParameters[1].TrimStart(' '), formatParameters[2].TrimStart(' '));
+                resourceName = string.Format(formatParameters[0], formatParameters[1].TrimStart(' '), formatParameters[2].TrimStart(' ')).Split('/').Last();
             }
 
             return resourceName;
@@ -484,7 +563,8 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
         private void MarkProperties(JToken currentToken, string resourceName, IDictionary<string, bool> marked)
         {
-            if (currentToken.IsLeaf())
+            // Need to handle arrays better.....
+            if (currentToken.IsLeaf() || currentToken is JArray)
             {
                 marked.Add(resourceName + "." + currentToken.Path.Substring(4), true);
                 return;
