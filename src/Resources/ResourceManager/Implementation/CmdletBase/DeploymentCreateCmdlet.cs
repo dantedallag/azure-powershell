@@ -33,9 +33,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
     using System.Threading.Tasks;
     using JsonDiffPatchDotNet;
     using Newtonsoft.Json;
-    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.NewSdkExtensions;
     using System.Collections;
-    using System.ComponentModel;
 
     public abstract class DeploymentCreateCmdlet : DeploymentWhatIfCmdlet
     {
@@ -58,9 +56,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             string warningMessage = null;
             string captionMessage = null;
 
+            PSWhatIfOperationResult whatIfResult = null;
+
             if (this.ShouldExecuteWhatIf())
             {
-                PSWhatIfOperationResult whatIfResult = this.ExecuteWhatIf();
+                whatIfResult = this.ExecuteWhatIf();
 
                 // -----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -69,23 +69,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 {
                     if (Poc1WhatIf.IsPresent)
                     {
-                        /***
-                         * POC 1 will work in 2 steps: Saving noise and Ingesting noise. 
-                         * 
-                         * Saving the noise will run whatif and save changes to an external file.
-                         * 
-                         * Ingesting the noise will run whatif. It will then load the json from the external file and
-                         * remove relevant changes.
-                         * 
-                         * Considerations:
-                         * - Treats array changes as a single unit, as in it only removes a top level array as noise if the
-                         * array matches exactly. There are also 2 ways to diff an array: using the .NET json diff library (which
-                         * is what whatif uses internally) or use the external JS server that runs a more feature rich version of the
-                         * the same libarary. Essentially, it diffs arrays more intelligently, accounting for order of elemenets. To 
-                         * implement smarter noise removal of array elements, work needs to be done.
-                         * 
-                         */
-
                         // Ensure only one step is being handeled per call. Poc1 requires 2 invocations of the cmdelt.
                         if (!(Poc1SaveNoise.IsPresent || Poc1IngestNoise.IsPresent) || (Poc1SaveNoise.IsPresent && Poc1IngestNoise.IsPresent))
                         {
@@ -99,15 +82,13 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
                         var whatIfOperationResult = whatIfResult.whatIfOperationResult;
 
-                        // Clear these two lists as they are not relevant. Newer feature, so we don't want to create confusion.
-                        whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
-                        whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
-
                         if (Poc1SaveNoise.IsPresent)
                         {
                             // Save noise to provided file.
                             SaveNoise(whatIfOperationResult.Changes, Poc1NoiseStorageFile);
-                            this.WriteDebug("Saved Noise file!");
+                            this.WriteDebug("POC1: Saved Noise file!");
+                            
+                            return;
                         }
                         else if (Poc1IngestNoise.IsPresent)
                         {
@@ -117,34 +98,11 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                     }
                     else if (Poc2WhatIf.IsPresent)
                     {
-                        /***
-                         * POC 2 will work with a single step: removing everything from the whatif response that is not 
-                         * explictly defined in the template.
-                         * 
-                         * All resources and resource properties will be marked in a Dictionary and the whatif response will
-                         * be checked against that dictionary. If there is nothing marked in the dictionary, the property (or 
-                         * complete resource) will be removed.
-                         * 
-                         * Considerations:
-                         * - Resources with changes unrelated to the explictly defined properties will show up as NoChange.
-                         * - Properties are "marked" with their resource name (as much can be extracted) + there json path in
-                         * the template. This means that resource of different types cannot be named the same thing. This becomes
-                         * a lot less complex when it is running internally in deployments.
-                         * - Array values are treated as single entities. As with option 1, this can be improved upon, though the way
-                         * we improve it this way may have to be thought of more.
-                         * - Resource names can't really handle many functions as we have to extract them to keep track of marked resources.
-                         */
-
-
                         // Mark all resource parameters that are explictly defined in the template.
                         var marked = new Dictionary<string, bool>();
                         var resources = this.TemplateObject["resources"].ToJToken();
 
                         var whatIfOperationResult = whatIfResult.whatIfOperationResult;
-
-                        // Clear these two lists as they are not relevant. Newer feature, so we don't want to create confusion.
-                        whatIfOperationResult.PotentialChanges = new List<WhatIfChange>();
-                        whatIfOperationResult.Diagnostics = new List<DeploymentDiagnosticsDefinition>();
 
                         // Go through each resource in the template and mark both the overall resource and each property path
                         // as explictly being defined.
@@ -167,64 +125,67 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                             MarkProperties(resourceProperties, resourceName, marked);
                         }
 
-                        var updatedChanges = new List<WhatIfChange>();
-
-                        foreach (var change in whatIfOperationResult.Changes)
+                        // Remove noise in changes and update the whatIf result.
+                        var updatedChanges = RemoveNoise(whatIfOperationResult.Changes, marked);
+                        whatIfOperationResult.Changes = updatedChanges;
+                    }
+                    else if (Poc3WhatIf.IsPresent)
+                    {
+                        // Ensure only one step is being handeled per call. Poc3 requires 2 invocations of the cmdelt.
+                        if (!(Poc3SaveNoise.IsPresent || Poc3IngestNoise.IsPresent) || (Poc3SaveNoise.IsPresent && Poc3IngestNoise.IsPresent))
                         {
-                            // Grab resource name from id.
-                            var changeResourceName = change.ResourceId.Split('/').Last();
-
-                            // Handle no change resources. For this POC, remove a NoChange resource if the resource was not part of the deployment.
-                            // Otherwise, keep NoChange, which the assumption that it only considers properties explictly set on resource.
-                            if (change.Delta == null || change.Delta.Count == 0)
-                            {
-                                if (marked.ContainsKey(changeResourceName))
-                                {
-                                    updatedChanges.Add(change);
-                                }
-
-                                continue;
-                            }
-
-                            var newDelta = new List<WhatIfPropertyChange>();
-                            foreach (var delta in change.Delta)
-                            {
-                                if (marked.ContainsKey(changeResourceName + "." + delta.Path))
-                                {
-                                    newDelta.Add(delta);
-                                }
-                                else
-                                {
-                                    // Remove delta changes from change before and after.
-                                    var splitIndex = delta.Path.LastIndexOf(".");
-                                    var parentPath = delta.Path.Substring(0, splitIndex);
-                                    var noisyProperty = delta.Path.Substring(splitIndex + 1);
-
-                                    if (delta.PropertyChangeType == PropertyChangeType.Modify || delta.PropertyChangeType == PropertyChangeType.NoEffect || delta.PropertyChangeType == PropertyChangeType.Array)
-                                    {
-
-                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
-                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
-                                    }
-                                    else if (delta.PropertyChangeType == PropertyChangeType.Delete)
-                                    {
-                                        ((JObject)((JObject)change.Before).SelectToken(parentPath)).Remove(noisyProperty);
-                                    }
-                                    else if (delta.PropertyChangeType == PropertyChangeType.Create)
-                                    {
-                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
-                                    }
-                                }
-                            }
-
-                            if (newDelta.Count > 0)
-                            {
-                                change.Delta = newDelta;
-                                updatedChanges.Add(change);
-                            }
+                            throw new Exception("Must have only 1 of Poc1SaveNoise and Poc1IngestNoise set when running Poc3WhatIf.");
+                        }
+                        // Ensure storage file path is provided.
+                        if (Poc1NoiseStorageFile == null || Poc1NoiseStorageFile == "")
+                        {
+                            throw new Exception("The Poc3MarkedPropertiesStorageFile parameter cannot be empty when running Poc3WhatIf.");
                         }
 
-                        whatIfOperationResult.Changes = updatedChanges;
+                        // Mark all resource parameters that are explictly defined in the template.
+                        var marked = new Dictionary<string, bool>();
+                        var resources = this.TemplateObject["resources"].ToJToken();
+
+                        var whatIfOperationResult = whatIfResult.whatIfOperationResult;
+
+                        // Go through each resource in the template and mark both the overall resource and each property path
+                        // as explictly being defined.
+                        foreach (var resource in resources)
+                        {
+                            var resourceProperties = resource["properties"];
+                            var resourceName = resource["name"].ToString();
+                            var resourceType = resource["type"].ToString();
+
+                            // Handle functions.
+                            if (resourceName.Contains("["))
+                            {
+                                resourceName = HandleFunctionInName(resourceName);
+                            }
+
+                            // Mark the resource as a whole in case resources are implictly created. We don't want to include implicitly created
+                            // resources, even if there were no changes.
+                            marked[resourceName] = true;
+
+                            MarkProperties(resourceProperties, resourceName, marked);
+                        }
+
+                        if (Poc3SaveNoise.IsPresent)
+                        {
+                            // Save properties to simulate saving on deployment.
+                            SaveMarkedProperties(marked, Poc3MarkedPropertiesStorageFile);
+                            this.WriteDebug("POC1: Saved Noise file!");
+                            
+                            return;
+                        }
+                        else if (Poc3IngestNoise.IsPresent)
+                        {
+                            // Mark properties that were explicitly set in the previous deployment.
+                            IngestPreviouslyMarkedProperties(marked, Poc3MarkedPropertiesStorageFile);
+
+                            // Remove noise in changes and update the whatIf result.
+                            var updatedChanges = RemoveNoise(whatIfOperationResult.Changes, marked);
+                            whatIfOperationResult.Changes = updatedChanges;
+                        }
                     }
                 }
 
@@ -242,21 +203,26 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                     this.WriteInformation(whatIfInformation, tags);
                     //this.ExecuteDeployment();
 
+                    this.WriteObject(whatIfResult);
                     return;
                 }
 
                 string cursorUp = $"{(char)27}[1A";
-
+                
                 // Use \r to override the built-in "What if:" in output.
                 whatIfMessage = $"\r        \r{Environment.NewLine}{whatIfFormattedOutput}{Environment.NewLine}";
                 warningMessage = $"{Environment.NewLine}{Resources.ConfirmDeploymentMessage}";
                 captionMessage = $"{cursorUp}{Color.Reset}{whatIfMessage}";
+
+                this.WriteInformation(whatIfMessage);
             }
 
             if (this.ShouldProcess(whatIfMessage, warningMessage, captionMessage))
             {
                 //this.ExecuteDeployment();
             }
+
+            this.WriteObject(whatIfResult);
         }
         protected void ExecuteDeployment()
         {
@@ -328,6 +294,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
             }
             return base.GetDynamicParameters();
         }
+
         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //------------------------------------------------------------------ Temporary Code for POC1 ----------------------------------------------------------------------------
 
@@ -345,12 +312,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
 
         [Parameter(Mandatory = false, HelpMessage = "File to save noise to.")]
         public string Poc1NoiseStorageFile { get; set; }
-
-        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC2 noise reduction if whatif flag is also provided.")]
-        public SwitchParameter Poc2WhatIf { get; set; }
-
-        //[Parameter(Mandatory = false, HelpMessage = "Temporary parameter for noise reduction POC that returns the whatif object directly, instead of processing it.")]
-        //public SwitchParameter WhatIfOverrideObjectReturn { get; set; }
 
         private void SaveNoise(IList<WhatIfChange> changes, string noiseStorageFile)
         {
@@ -419,7 +380,7 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                     if (noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
                         noise[change.ResourceId][deltaEntry.Path] != null)
                     {
-                        if (deltaEntry.Children.Count == 0)
+                        if (deltaEntry.Children == null || deltaEntry.Children.Count == 0)
                         {
                             // Case 1: Primative Delta
                             if (JsonEqualPrimative(noise[change.ResourceId][deltaEntry.Path].ToJToken(), deltaEntry.ToJson()) == false)
@@ -535,6 +496,9 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
         //------------------------------------------------------------------ Temporary Code for POC2 ----------------------------------------------------------------------------
 
+        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC2 noise reduction if whatif flag is also provided.")]
+        public SwitchParameter Poc2WhatIf { get; set; }
+
         private string HandleFunctionInName(string resourceName)
         {
             // Process template parameters that are strings for resource name replacemaent.
@@ -576,6 +540,113 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 var childTokenName = pathSplit[pathSplit.Length - 1];
                 MarkProperties(childToken, resourceName, marked);
             }
+        }
+
+        private List<WhatIfChange> RemoveNoise(IList<WhatIfChange> changes, IDictionary<string, bool> marked)
+        {
+            var updatedChanges = new List<WhatIfChange>();
+
+            foreach (var change in changes)
+            {
+                // Grab resource name from id.
+                var changeResourceName = change.ResourceId.Split('/').Last();
+
+                // Handle no change resources. For this POC, remove a NoChange resource if the resource was not part of the deployment.
+                // Otherwise, keep NoChange, which the assumption that it only considers properties explictly set on resource.
+                if (change.Delta == null || change.Delta.Count == 0)
+                {
+                    if (marked.ContainsKey(changeResourceName))
+                    {
+                        updatedChanges.Add(change);
+                    }
+
+                    continue;
+                }
+
+                var newDelta = new List<WhatIfPropertyChange>();
+                foreach (var delta in change.Delta)
+                {
+                    if (marked.ContainsKey(changeResourceName + "." + delta.Path))
+                    {
+                        newDelta.Add(delta);
+                    }
+                    else
+                    {
+                        // Remove delta changes from change before and after.
+                        var splitIndex = delta.Path.LastIndexOf(".");
+                        var parentPath = delta.Path.Substring(0, splitIndex);
+                        var noisyProperty = delta.Path.Substring(splitIndex + 1);
+
+                        if (delta.PropertyChangeType == PropertyChangeType.Modify || delta.PropertyChangeType == PropertyChangeType.NoEffect || delta.PropertyChangeType == PropertyChangeType.Array)
+                        {
+
+                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                        }
+                        else if (delta.PropertyChangeType == PropertyChangeType.Delete)
+                        {
+                            ((JObject)((JObject)change.Before).SelectToken(parentPath)).Remove(noisyProperty);
+                        }
+                        else if (delta.PropertyChangeType == PropertyChangeType.Create)
+                        {
+                            ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                        }
+                    }
+                }
+
+                if (newDelta.Count > 0)
+                {
+                    change.Delta = newDelta;
+                }
+                else
+                {
+                    change.Delta = null;
+                    change.ChangeType = ChangeType.NoChange;
+                }
+
+                updatedChanges.Add(change);
+            }
+
+            return updatedChanges;
+        }
+
+        // ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+        //------------------------------------------------------------------ Temporary Code for POC3 ----------------------------------------------------------------------------
+
+        [Parameter(Mandatory = false, HelpMessage = "File to write the map of marked properties to that will be used for subsequent deployments.")]
+        public string Poc3MarkedPropertiesStorageFile { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC1 noise reduction if whatif flag is also provided.")]
+        public SwitchParameter Poc3WhatIf { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC1 noise reduction, or the saving of the noise to an external file (db).")]
+        public SwitchParameter Poc3SaveNoise { get; set; }
+
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC1 noise reduction, or the loading of the noise to an external file (db) and canceling out of said noise.\"")]
+        public SwitchParameter Poc3IngestNoise { get; set; }
+
+        private void SaveMarkedProperties(IDictionary<string, bool> marked, string markedPropertiesStorageFile)
+        {
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamWriter sw = new StreamWriter(markedPropertiesStorageFile))
+            using (JsonWriter writer = new JsonTextWriter(sw))
+            {
+                serializer.Serialize(writer, marked);
+            }
+        }
+
+        private void IngestPreviouslyMarkedProperties(IDictionary<string, bool> markedProperties, string markedPropertiesStorageFile)
+        {
+            if (markedPropertiesStorageFile == null)
+            {
+                return;
+            }
+
+            // Read in the old properties
+
+            // add them to the map
+
+            var previousMarkedProperties = new Dictionary<string, bool>();
         }
     }
 }
