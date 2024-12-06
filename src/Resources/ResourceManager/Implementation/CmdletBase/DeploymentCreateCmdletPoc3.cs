@@ -1,25 +1,17 @@
-﻿namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.CmdletBase
+﻿//using Azure.Deployments.Core;
+//using Azure.Deployments.Engine;
+//using Azure.Deployments.Engine.Host.Azure;
+//using Azure.Deployments.Core.Constants;
+
+namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.CmdletBase
 {
     using System;
     using System.IO;
-    using System.Linq;
     using System.Management.Automation;
-    using Microsoft.Azure.Commands.Common.Strategies;
     using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Extensions;
-    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Formatters;
-    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.Properties;
-    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels;
-    using Microsoft.Azure.Commands.ResourceManager.Cmdlets.SdkModels.Deployments;
     using Microsoft.Azure.Management.Resources.Models;
     using System.Collections.Generic;
-    using Newtonsoft.Json.Linq;
-    using System.Text.RegularExpressions;
-    using System.Net.Http;
-    using System.Text;
-    using System.Threading.Tasks;
-    using JsonDiffPatchDotNet;
     using Newtonsoft.Json;
-    using System.Collections;
 
     public abstract partial class DeploymentCreateCmdlet
     {
@@ -32,6 +24,9 @@
         [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC1 noise reduction, or the saving of the noise to an external file (db).")]
         public SwitchParameter Poc3SaveNoise { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "If the deployment failed, the properties are added instead of overwriting previous properties.")]
+        public SwitchParameter Poc3SaveNoiseDeploymentFailed { get; set; }
+
         [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC1 noise reduction, or the loading of the noise to an external file (db) and canceling out of said noise.\"")]
         public SwitchParameter Poc3IngestNoise { get; set; }
 
@@ -43,14 +38,14 @@
                 throw new Exception("Must have only 1 of Poc1SaveNoise and Poc1IngestNoise set when running Poc3WhatIf.");
             }
             // Ensure storage file path is provided.
-            if (Poc1NoiseStorageFile == null || Poc1NoiseStorageFile == "")
+            if (Poc3MarkedPropertiesStorageFile == null || Poc3MarkedPropertiesStorageFile == "")
             {
                 throw new Exception("The Poc3MarkedPropertiesStorageFile parameter cannot be empty when running Poc3WhatIf.");
             }
 
             // Mark all resource parameters that are explictly defined in the template.
             var marked = new Dictionary<string, bool>();
-            var resources = this.TemplateObject["resources"].ToJToken();
+            var resources = ExtractResourcesFromTemplate();
 
             // Go through each resource in the template and mark both the overall resource and each property path
             // as explictly being defined.
@@ -73,13 +68,19 @@
                 MarkProperties(resourceProperties, resourceName, marked);
             }
 
+            //var engine = new AzureDeploymentEngine();
+
+
             if (Poc3SaveNoise.IsPresent)
             {
+                if (Poc3SaveNoiseDeploymentFailed.IsPresent)
+                {
+                    IngestPreviouslyMarkedProperties(marked, Poc3MarkedPropertiesStorageFile);
+                }
+
                 // Save properties to simulate saving on deployment.
                 SaveMarkedProperties(marked, Poc3MarkedPropertiesStorageFile);
                 this.WriteDebug("POC1: Saved Noise file!");
-
-                return;
             }
             else if (Poc3IngestNoise.IsPresent)
             {
@@ -91,7 +92,6 @@
                 whatIfOperationResult.Changes = updatedChanges;
             }
         }
-
 
         private void SaveMarkedProperties(IDictionary<string, bool> marked, string markedPropertiesStorageFile)
         {
@@ -105,16 +105,20 @@
 
         private void IngestPreviouslyMarkedProperties(IDictionary<string, bool> markedProperties, string markedPropertiesStorageFile)
         {
-            if (markedPropertiesStorageFile == null)
+            // Read in the previously marked properties
+            Dictionary<string, bool> previouslyMarkedProperties;
+            JsonSerializer serializer = new JsonSerializer();
+            using (StreamReader sr = new StreamReader(markedPropertiesStorageFile))
+            using (JsonReader reader = new JsonTextReader(sr))
             {
-                return;
+                previouslyMarkedProperties = serializer.Deserialize<Dictionary<string, bool>>(reader);
             }
 
-            // Read in the old properties
-
-            // add them to the map
-
-            var previousMarkedProperties = new Dictionary<string, bool>();
+            // Add them to the marked map.
+            foreach (var property in previouslyMarkedProperties.Keys) 
+            {
+                markedProperties[property] = true;
+            }
         }
     }
 }

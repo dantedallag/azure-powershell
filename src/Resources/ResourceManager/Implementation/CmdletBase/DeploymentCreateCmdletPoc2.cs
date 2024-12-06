@@ -7,6 +7,7 @@
     using System.Collections.Generic;
     using Newtonsoft.Json.Linq;
     using System.Collections;
+    using Microsoft.Azure.Commands.Common.Authentication.Abstractions;
 
     public abstract partial class DeploymentCreateCmdlet
     {
@@ -17,7 +18,7 @@
         {
             // Mark all resource parameters that are explictly defined in the template.
             var marked = new Dictionary<string, bool>();
-            var resources = this.TemplateObject["resources"].ToJToken();
+            var resources = ExtractResourcesFromTemplate();
 
             // Go through each resource in the template and mark both the overall resource and each property path
             // as explictly being defined.
@@ -43,6 +44,19 @@
             // Remove noise in changes and update the whatIf result.
             var updatedChanges = RemoveNoise(whatIfOperationResult.Changes, marked);
             whatIfOperationResult.Changes = updatedChanges;
+        }
+
+        private JToken ExtractResourcesFromTemplate()
+        {
+            if (!string.IsNullOrEmpty(TemplateFile))
+            {
+                return FileUtilities.DataStore.ReadFileAsStream(TemplateFile).FromJson<JObject>()["resources"];
+            }
+            else
+            {
+                return TemplateObject.ToJToken()["resources"];
+            }
+
         }
 
         private string HandleFunctionInName(string resourceName)
@@ -76,7 +90,8 @@
             // Need to handle arrays better.....
             if (currentToken.IsLeaf() || currentToken is JArray)
             {
-                marked.Add(resourceName + "." + currentToken.Path.Substring(4), true);
+                var index = currentToken.Path.IndexOf(']');
+                marked.Add(resourceName + currentToken.Path.Remove(0, index + 1), true);
                 return;
             }
 
