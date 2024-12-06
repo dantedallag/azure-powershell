@@ -29,6 +29,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         [Parameter(Mandatory = false, HelpMessage = "The query string (for example, a SAS token) to be used with the TemplateUri parameter. Would be used in case of linked templates")]
         public string QueryString { get; set; }
 
+        [Parameter(Mandatory = false, HelpMessage = "For POCs, return the whatif result object.")]
+        public SwitchParameter PocReturnWhatIfResultObject { get; set; }
+
+
         protected abstract ConfirmImpact ConfirmImpact { get; }
 
         /// <summary>
@@ -88,7 +92,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                     this.WriteInformation(whatIfInformation, tags);
                     //this.ExecuteDeployment();
 
-                    this.WriteObject(whatIfResult);
+                    if (PocReturnWhatIfResultObject.IsPresent)
+                    {
+                        this.WriteObject(whatIfResult);
+                    }
                     return;
                 }
 
@@ -98,8 +105,6 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 whatIfMessage = $"\r        \r{Environment.NewLine}{whatIfFormattedOutput}{Environment.NewLine}";
                 warningMessage = $"{Environment.NewLine}{Resources.ConfirmDeploymentMessage}";
                 captionMessage = $"{cursorUp}{Color.Reset}{whatIfMessage}";
-
-                this.WriteInformation(whatIfMessage);
             }
 
             if (this.ShouldProcess(whatIfMessage, warningMessage, captionMessage))
@@ -107,7 +112,10 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 //this.ExecuteDeployment();
             }
 
-            this.WriteObject(whatIfResult);
+            if (PocReturnWhatIfResultObject.IsPresent)
+            {
+                this.WriteObject(whatIfResult);
+            }
         }
         protected void ExecuteDeployment()
         {

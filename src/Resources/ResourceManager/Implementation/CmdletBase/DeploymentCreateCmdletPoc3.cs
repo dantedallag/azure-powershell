@@ -18,16 +18,16 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
         [Parameter(Mandatory = false, HelpMessage = "File to write the map of marked properties to that will be used for subsequent deployments.")]
         public string Poc3MarkedPropertiesStorageFile { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC1 noise reduction if whatif flag is also provided.")]
+        [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC3 noise reduction if whatif flag is also provided.")]
         public SwitchParameter Poc3WhatIf { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC1 noise reduction, or the saving of the noise to an external file (db).")]
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 1 of POC3 noise reduction, or the saving of the marked properties to an external file (db).")]
         public SwitchParameter Poc3SaveNoise { get; set; }
 
         [Parameter(Mandatory = false, HelpMessage = "If the deployment failed, the properties are added instead of overwriting previous properties.")]
         public SwitchParameter Poc3SaveNoiseDeploymentFailed { get; set; }
 
-        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC1 noise reduction, or the loading of the noise to an external file (db) and canceling out of said noise.\"")]
+        [Parameter(Mandatory = false, HelpMessage = "Switch to run step 2 of POC3 noise reduction, or the loading of the marked properties to an external file (db) and canceling out of noise.\"")]
         public SwitchParameter Poc3IngestNoise { get; set; }
 
         private void Poc3(WhatIfOperationResult whatIfOperationResult)

@@ -13,7 +13,10 @@
     {
         [Parameter(Mandatory = false, HelpMessage = "Switch to enable POC2 noise reduction if whatif flag is also provided.")]
         public SwitchParameter Poc2WhatIf { get; set; }
-     
+
+        [Parameter(Mandatory = false, HelpMessage = "Provides more granular array noise handling in POC2 and POC3 as an experimental feature.")]
+        public SwitchParameter Poc2And3BetterArrayHandling { get; set; }
+
         private void Poc2(WhatIfOperationResult whatIfOperationResult)
         {
             // Mark all resource parameters that are explictly defined in the template.
@@ -88,7 +91,7 @@
         private void MarkProperties(JToken currentToken, string resourceName, IDictionary<string, bool> marked)
         {
             // Need to handle arrays better.....
-            if (currentToken.IsLeaf() || currentToken is JArray)
+            if (currentToken.IsLeaf())
             {
                 var index = currentToken.Path.IndexOf(']');
                 marked.Add(resourceName + currentToken.Path.Remove(0, index + 1), true);
@@ -101,6 +104,48 @@
                 var childTokenName = pathSplit[pathSplit.Length - 1];
                 MarkProperties(childToken, resourceName, marked);
             }
+        }
+
+        private bool CheckForArrayValidChanges(WhatIfPropertyChange current, string path, IDictionary<string, bool> marked)
+        {
+            // Need to handle arrays better.....
+            if (current.Children == null || current.Children.Count == 0)
+            {
+                if (marked.ContainsKey(path + "." + current.Path))
+                {
+                    return true;
+                }
+                else
+                {
+                    current.PropertyChangeType = PropertyChangeType.NoEffect;
+                    return false;
+                }
+            }
+
+            bool validDelta = false;
+            
+            foreach (var childDelta in current.Children)
+            {
+                string adjustedPath;
+
+                if (int.TryParse(current.Path, out _))
+                {
+                    adjustedPath = path + "[" + current.Path + "]";
+                }
+                else
+                {
+                    adjustedPath = path + "." + current.Path;
+                }
+
+                bool changeDetected = CheckForArrayValidChanges(childDelta, adjustedPath, marked);
+
+                if (changeDetected)
+                {
+                    validDelta = true;
+                }
+            }
+
+            return validDelta;
         }
 
         private List<WhatIfChange> RemoveNoise(IList<WhatIfChange> changes, IDictionary<string, bool> marked)
@@ -127,7 +172,16 @@
                 var newDelta = new List<WhatIfPropertyChange>();
                 foreach (var delta in change.Delta)
                 {
-                    if (marked.ContainsKey(changeResourceName + "." + delta.Path))
+                    if (delta.PropertyChangeType == PropertyChangeType.Array && Poc2And3BetterArrayHandling.IsPresent)
+                    {
+                        var shouldAddDelta = CheckForArrayValidChanges(delta, changeResourceName, marked);
+
+                        if (shouldAddDelta)
+                        {
+                            newDelta.Add(delta);
+                        }
+                    }
+                    else if (marked.ContainsKey(changeResourceName + "." + delta.Path))
                     {
                         newDelta.Add(delta);
                     }
