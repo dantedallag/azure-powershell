@@ -143,12 +143,48 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                 {
                     bool isNoise = false;
 
-                    // If function exists in After, skip.
+                    // DEAL WITH FUNCTIONS -----------------------------------------------------
+
+                    // If function exists in After, override with COMPUTED:
                     if (Regex.IsMatch(deltaEntry.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
                     {
-                        // If an unevaluated function exists, no way to determine if noise.
-                        break;
+                        deltaEntry.After = "COMPUTED".ToJToken();
+                        newDelta.Add(deltaEntry);
+                        continue;
                     }
+
+                    if (deltaEntry.PropertyChangeType == PropertyChangeType.Array)
+                    {
+                        var resetChild = false;
+
+                        // Check nested properties for functions:
+                        foreach (var child in deltaEntry.Children)
+                        {
+                            if (child.Children != null)
+                            {
+                                foreach (var innerChild in child.Children)
+                                {
+                                    if (innerChild.PropertyChangeType == PropertyChangeType.Modify)
+                                    {
+                                        // If function exists in After, override with COMPUTED:
+                                        if (Regex.IsMatch(innerChild.After.ToJson(), ".*\\[.*\\(.*\\).*\\]"))
+                                        {
+                                            innerChild.After = "COMPUTED".ToJToken();
+                                            resetChild = true;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if (resetChild)
+                        {
+                            newDelta.Add(deltaEntry);
+                            continue;
+                        }
+                    }
+
+                    // --------------------------------------------------------------------
 
                     // Check if noise is possible for given delta on resource id.
                     if (noise[change.ResourceId].ContainsKey(deltaEntry.Path) &&
@@ -162,20 +198,57 @@ namespace Microsoft.Azure.Commands.ResourceManager.Cmdlets.Implementation.Cmdlet
                                 isNoise = true;
 
                                 var splitIndex = deltaEntry.Path.LastIndexOf(".");
-                                var parentPath = deltaEntry.Path.Substring(0, splitIndex);
-                                var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+                                if (splitIndex == -1)
+                                {
+                                    // Top level property:
+                                    var token = change.After;
 
-                                if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
-                                {
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                    if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                    {
+                                        if (deltaEntry.After.ToString().Contains("[reference"))
+                                        {
+                                            token = "COMPUTED".ToJToken();
+                                        }
+                                        else
+                                        {
+                                            token = deltaEntry.Before.ToJToken();
+                                        }
+                                    }
+                                    else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                    {
+                                        ((JObject)token).Add(deltaEntry.Path, deltaEntry.Before.ToJToken());
+                                    }
+                                    else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
+                                    {
+                                        ((JObject)token).Remove(deltaEntry.Path);
+                                    }
                                 }
-                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                else
                                 {
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
-                                }
-                                else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
-                                {
-                                    ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                    // nested property:
+                                    var parentPath = deltaEntry.Path.Substring(0, splitIndex);
+                                    var noisyProperty = deltaEntry.Path.Substring(splitIndex + 1);
+
+                                    if (deltaEntry.PropertyChangeType == PropertyChangeType.Modify)
+                                    {
+                                        if (deltaEntry.After.ToString().Contains("[reference"))
+                                        {
+                                            ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = "COMPUTED".ToJToken();
+                                        }
+                                        else
+                                        {
+
+                                            ((JObject)((JObject)change.After).SelectToken(parentPath))[noisyProperty] = deltaEntry.Before.ToJToken();
+                                        }
+                                    }
+                                    else if (deltaEntry.PropertyChangeType == PropertyChangeType.Delete)
+                                    {
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Add(noisyProperty, deltaEntry.Before.ToJToken());
+                                    }
+                                    else if (deltaEntry.PropertyChangeType == PropertyChangeType.Create)
+                                    {
+                                        ((JObject)((JObject)change.After).SelectToken(parentPath)).Remove(noisyProperty);
+                                    }
                                 }
                             }
                         }
